@@ -1,0 +1,426 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PhpMlKit\Sndfile\Tests;
+
+use PhpMlKit\NDArray\DType;
+use PhpMlKit\NDArray\NDArray;
+use PhpMlKit\Sndfile\Enums\AudioFormat;
+use PhpMlKit\Sndfile\Enums\FileMode;
+use PhpMlKit\Sndfile\Enums\ResampleQuality;
+use PhpMlKit\Sndfile\Enums\SampleFormat;
+use PhpMlKit\Sndfile\Exceptions\SndfileException;
+use PhpMlKit\Sndfile\SndFile;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\TestCase;
+
+use function PhpMlKit\Sndfile\snd_check_format;
+use function PhpMlKit\Sndfile\snd_info;
+use function PhpMlKit\Sndfile\snd_read;
+use function PhpMlKit\Sndfile\snd_resample;
+use function PhpMlKit\Sndfile\snd_write;
+
+/**
+ * @internal
+ */
+#[CoversNothing]
+final class FunctionsTest extends TestCase
+{
+    private string $monoFloatWav;
+    private string $stereoWav;
+    private string $pcm16Wav;
+
+    protected function setUp(): void
+    {
+        $this->monoFloatWav = Fixtures::monoFloatWav();
+        $this->stereoWav = Fixtures::stereoFloatWav();
+        $this->pcm16Wav = Fixtures::monoPcm16Wav();
+    }
+
+    // ===================================================================
+    // snd_read
+    // ===================================================================
+
+    public function testReadFullFile(): void
+    {
+        [$data, $sr] = snd_read($this->monoFloatWav);
+
+        $this->assertSame([800], $data->shape());
+        $this->assertSame(8000, $sr);
+        $this->assertSame(DType::Float32, $data->dtype());
+    }
+
+    public function testReadMonoAlways2dFalse(): void
+    {
+        [$data, $_] = snd_read($this->monoFloatWav);
+
+        $this->assertSame(1, $data->ndim());
+        $this->assertSame([800], $data->shape());
+    }
+
+    public function testReadMonoAlways2dTrue(): void
+    {
+        [$data, $_] = snd_read($this->monoFloatWav, always2d: true);
+
+        $this->assertSame(2, $data->ndim());
+        $this->assertSame([800, 1], $data->shape());
+    }
+
+    public function testReadStereo(): void
+    {
+        [$data, $_] = snd_read($this->stereoWav);
+
+        $this->assertSame(2, $data->ndim());
+        $this->assertSame([800, 2], $data->shape());
+    }
+
+    public function testReadStartStop(): void
+    {
+        [$data, $_] = snd_read($this->monoFloatWav, start: 100, stop: 300);
+
+        $this->assertSame([200], $data->shape());
+    }
+
+    public function testReadEmptyRange(): void
+    {
+        [$data, $_] = snd_read($this->monoFloatWav, start: 5, stop: 5);
+
+        $this->assertSame(0, $data->shape()[0]);
+    }
+
+    public function testReadStopBeyondFile(): void
+    {
+        [$data, $_] = snd_read($this->monoFloatWav, start: 0, stop: 99999);
+
+        $this->assertSame([800], $data->shape());
+    }
+
+    public function testReadStartBeyondFile(): void
+    {
+        [$data, $_] = snd_read($this->monoFloatWav, start: 99999);
+
+        $this->assertSame(0, $data->shape()[0]);
+    }
+
+    public function testReadPcm16ReturnsInt16(): void
+    {
+        [$data, $_] = snd_read($this->pcm16Wav);
+
+        $this->assertSame(DType::Int16, $data->dtype());
+    }
+
+    // ===================================================================
+    // snd_write
+    // ===================================================================
+
+    public function testWriteReadRoundTripFloat(): void
+    {
+        $src = NDArray::array([[0.5], [-0.5], [0.25], [-0.25]], DType::Float32);
+        $tmp = sys_get_temp_dir().'/sw_float_'.uniqid().'.wav';
+
+        snd_write($tmp, $src, 8000, AudioFormat::Wav, SampleFormat::Float);
+        [$back, $sr] = snd_read($tmp, always2d: true);
+
+        $this->assertSame(8000, $sr);
+        $srcArr = $src->toArray();
+        $backArr = $back->toArray();
+
+        for ($i = 0; $i < 4; ++$i) {
+            $this->assertEqualsWithDelta((float) $srcArr[$i][0], (float) $backArr[$i][0], 0.001);
+        }
+
+        unlink($tmp);
+    }
+
+    public function testWriteReadRoundTripPcm16(): void
+    {
+        $src = NDArray::array([[100], [200], [-300], [400]], DType::Int16);
+        $tmp = sys_get_temp_dir().'/sw_pcm16_'.uniqid().'.wav';
+
+        snd_write($tmp, $src, 8000, AudioFormat::Wav, SampleFormat::Pcm16);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertSame(DType::Int16, $back->dtype());
+        $this->assertSame([4], $back->shape());
+
+        $arr = $back->toArray();
+        $this->assertSame(100, (int) $arr[0]);
+        $this->assertSame(200, (int) $arr[1]);
+
+        unlink($tmp);
+    }
+
+    public function testWrite1DInput(): void
+    {
+        $src = NDArray::array([0.1, 0.2, 0.3], DType::Float32);
+        $tmp = sys_get_temp_dir().'/sw_1d_'.uniqid().'.wav';
+
+        snd_write($tmp, $src, 8000);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertSame([3], $back->shape());
+
+        unlink($tmp);
+    }
+
+    public function testWriteFloat32ToPcm16ConvertsDtype(): void
+    {
+        $src = NDArray::array([[0.5], [-0.5], [0.25]], DType::Float32);
+        $tmp = sys_get_temp_dir().'/sw_f32pcm16_'.uniqid().'.wav';
+
+        snd_write($tmp, $src, 8000, AudioFormat::Wav, SampleFormat::Pcm16);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertSame(DType::Int16, $back->dtype());
+
+        unlink($tmp);
+    }
+
+    public function testWriteInt16ToOggVorbis(): void
+    {
+        $src = NDArray::array([[100], [200], [300]], DType::Int16);
+        $tmp = sys_get_temp_dir().'/sw_ogg_'.uniqid().'.ogg';
+
+        snd_write($tmp, $src, 8000, AudioFormat::Ogg, SampleFormat::Vorbis);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertGreaterThan(0, $back->shape()[0]);
+
+        unlink($tmp);
+    }
+
+    public function testWriteInvalidFormatComboThrows(): void
+    {
+        $src = NDArray::array([[0.1], [0.2]], DType::Float32);
+        $tmp = sys_get_temp_dir().'/sw_inv_'.uniqid().'.ogg';
+
+        $this->expectException(SndfileException::class);
+
+        snd_write($tmp, $src, 8000, AudioFormat::Ogg, SampleFormat::Pcm16);
+    }
+
+    public function testWriteFormatFromExtension(): void
+    {
+        $src = NDArray::array([[0.5], [-0.5]], DType::Float32);
+        $tmp = sys_get_temp_dir().'/sw_ext_'.uniqid().'.flac';
+
+        snd_write($tmp, $src, 8000);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertGreaterThan(0, $back->shape()[0]);
+
+        unlink($tmp);
+    }
+
+    public function testWriteDefaultSubtypeFromFormat(): void
+    {
+        $src = NDArray::array([[0.5], [-0.5]], DType::Float32);
+        $tmp = sys_get_temp_dir().'/sw_def_'.uniqid().'.wav';
+
+        // WAV defaults to Pcm16 when no subtype specified
+        snd_write($tmp, $src, 8000);
+        $info = snd_info($tmp);
+
+        $this->assertSame(SampleFormat::Pcm16, $info->sampleFormat);
+
+        unlink($tmp);
+    }
+
+    public function testWriteFloat64ToDouble(): void
+    {
+        $src = NDArray::array([[0.1], [0.2]], DType::Float64);
+        $tmp = sys_get_temp_dir().'/sw_dbl_'.uniqid().'.wav';
+
+        snd_write($tmp, $src, 8000, AudioFormat::Wav, SampleFormat::Double);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertSame(DType::Float64, $back->dtype());
+
+        unlink($tmp);
+    }
+
+    // ===================================================================
+    // snd_info
+    // ===================================================================
+
+    public function testInfoMatchesSndFile(): void
+    {
+        $info = snd_info($this->monoFloatWav);
+        $sf = new SndFile($this->monoFloatWav, FileMode::Read);
+        $sfInfo = $sf->info();
+        $sf->close();
+
+        $this->assertSame($info->frames, $sfInfo->frames);
+        $this->assertSame($info->channels, $sfInfo->channels);
+    }
+
+    // ===================================================================
+    // snd_check_format
+    // ===================================================================
+
+    public function testCheckWavPcm16(): void
+    {
+        $this->assertTrue(snd_check_format(AudioFormat::Wav, SampleFormat::Pcm16));
+    }
+
+    public function testCheckWavFloat(): void
+    {
+        $this->assertTrue(snd_check_format(AudioFormat::Wav, SampleFormat::Float));
+    }
+
+    public function testCheckWavDouble(): void
+    {
+        $this->assertTrue(snd_check_format(AudioFormat::Wav, SampleFormat::Double));
+    }
+
+    public function testCheckFlacPcm16(): void
+    {
+        $this->assertTrue(snd_check_format(AudioFormat::Flac, SampleFormat::Pcm16));
+    }
+
+    public function testCheckFlacFloat(): void
+    {
+        $this->assertFalse(snd_check_format(AudioFormat::Flac, SampleFormat::Float));
+    }
+
+    public function testCheckOggVorbis(): void
+    {
+        $this->assertTrue(snd_check_format(AudioFormat::Ogg, SampleFormat::Vorbis));
+    }
+
+    public function testCheckOggPcm16(): void
+    {
+        $this->assertFalse(snd_check_format(AudioFormat::Ogg, SampleFormat::Pcm16));
+    }
+
+    public function testCheckMpegMpegLayer3(): void
+    {
+        $this->assertTrue(snd_check_format(AudioFormat::Mpeg, SampleFormat::MpegLayerIII));
+    }
+
+    public function testCheckAiffFloat(): void
+    {
+        $this->assertTrue(snd_check_format(AudioFormat::Aiff, SampleFormat::Float));
+    }
+
+    // ===================================================================
+    // snd_resample
+    // ===================================================================
+
+    public function testResampleIdentity(): void
+    {
+        $data = NDArray::array([[0.1], [0.2], [0.3], [0.4]], DType::Float32);
+        $result = snd_resample($data, 8000, 8000);
+
+        $this->assertSame([4, 1], $result->shape());
+    }
+
+    public function testResampleDoublesFrames(): void
+    {
+        $data = NDArray::array([[0.1], [0.2], [0.3], [0.4]], DType::Float32);
+        $result = snd_resample($data, 8000, 16000);
+
+        $this->assertEquals([8, 1], $result->shape());
+    }
+
+    public function testResampleHalvesFrames(): void
+    {
+        $data = NDArray::array([[0.1], [0.2], [0.3], [0.4]], DType::Float32);
+        $result = snd_resample($data, 16000, 8000);
+
+        $this->assertEquals([2, 1], $result->shape());
+    }
+
+    public function testResampleChunkedVsSimpleMatch(): void
+    {
+        $data = NDArray::arange(0, 200, 1, DType::Float32)
+            ->multiply(2 * \M_PI * 440 / 8000)
+            ->sin()
+            ->insertaxis(1);
+
+        $chunked = snd_resample($data, 8000, 16000, chunkSize: 50);
+        $simple = snd_resample($data, 8000, 16000, chunkSize: null);
+
+        $this->assertSame($chunked->shape(), $simple->shape());
+    }
+
+    public function testResampleOutputIsFloat32(): void
+    {
+        $data = NDArray::array([[0.1], [0.2], [0.3], [0.4]], DType::Float32);
+        $result = snd_resample($data, 8000, 16000);
+
+        $this->assertSame(DType::Float32, $result->dtype());
+    }
+
+    public function testResampleInt16Input(): void
+    {
+        $data = NDArray::array([[100], [200], [300], [400]], DType::Int16);
+        $result = snd_resample($data, 8000, 16000);
+
+        $this->assertSame(DType::Float32, $result->dtype());
+        $this->assertGreaterThan(0, $result->shape()[0]);
+    }
+
+    public function testResampleStereo(): void
+    {
+        $data = NDArray::array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], DType::Float32);
+        $result = snd_resample($data, 8000, 16000);
+
+        $this->assertSame(2, $result->shape(1));
+    }
+
+    public function testResampleAllQualityLevels(): void
+    {
+        $data = NDArray::array([[0.1], [0.2], [0.3], [0.4]], DType::Float32);
+
+        foreach (ResampleQuality::cases() as $q) {
+            $result = snd_resample($data, 8000, 16000, quality: $q);
+            $this->assertGreaterThan(0, $result->shape(0), "Quality {$q->name} failed");
+        }
+    }
+
+    // ===================================================================
+    // Cross-cutting: dtype/format/subtype matrix
+    // ===================================================================
+
+    public function testWriteFloat32AsFloat(): void
+    {
+        $src = NDArray::array([[0.5], [-0.5]], DType::Float32);
+        $tmp = sys_get_temp_dir().'/cc_f32f_'.uniqid().'.wav';
+
+        snd_write($tmp, $src, 8000, AudioFormat::Wav, SampleFormat::Float);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertSame(DType::Float32, $back->dtype());
+        $this->assertSame([2], $back->shape());
+
+        unlink($tmp);
+    }
+
+    public function testWriteInt32AsPcm32(): void
+    {
+        $src = NDArray::array([[1000], [-2000]], DType::Int32);
+        $tmp = sys_get_temp_dir().'/cc_i32_'.uniqid().'.wav';
+
+        snd_write($tmp, $src, 8000, AudioFormat::Wav, SampleFormat::Pcm32);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertSame(DType::Int32, $back->dtype());
+
+        unlink($tmp);
+    }
+
+    public function testWriteFloat32ToFlacPcm16(): void
+    {
+        $src = NDArray::array([[0.5], [-0.5]], DType::Float32);
+        $tmp = sys_get_temp_dir().'/cc_flac_'.uniqid().'.flac';
+
+        snd_write($tmp, $src, 8000, AudioFormat::Flac, SampleFormat::Pcm16);
+        [$back, $_] = snd_read($tmp);
+
+        $this->assertSame(DType::Int16, $back->dtype());
+
+        unlink($tmp);
+    }
+}
