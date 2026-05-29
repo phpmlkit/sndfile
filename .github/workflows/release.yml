@@ -20,7 +20,7 @@ jobs:
             runner: ubuntu-24.04-arm
             archive_ext: tar.gz
           - platform: darwin-x86_64
-            runner: macos-13
+            runner: macos-15-intel
             archive_ext: tar.gz
           - platform: darwin-arm64
             runner: macos-latest
@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Create distribution package
         shell: bash
@@ -47,7 +47,7 @@ jobs:
 
       - name: Upload to Artifacts (workflow dispatch)
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-${{ matrix.platform }}
           path: dist-${{ matrix.platform }}.*
