@@ -1,7 +1,8 @@
 {
     "name": "phpmlkit/soundfile",
     "description": "Low-level libsndfile + libsamplerate bindings for PHP via FFI",
-    "type": "library",
+    "keywords": ["audio", "sound", "wav", "flac", "ogg", "mp3", "libsndfile", "libsamplerate", "resample", "ffi"],
+    "type": "platform-package",
     "license": "MIT",
     "authors": [
         {
