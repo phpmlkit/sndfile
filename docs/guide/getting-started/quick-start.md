@@ -14,9 +14,9 @@ The simplest way to load a file is `sf_read()`:
 ```php
 use function PhpMlKit\SoundFile\sf_read;
 
-[$audio, $sr] = sf_read('song.wav');
+[$audio, $info] = sf_read('song.wav');
 
-echo $sr;                     // 44100
+echo $info->sampleRate;               // 44100
 print_r($audio->shape());     // [441000]  (mono, 1D by default)
 echo $audio->dtype()->name;   // Float32
 ```
@@ -24,14 +24,14 @@ echo $audio->dtype()->name;   // Float32
 For a mono file, the default output is a 1D array. Set `always2d` to `true` for the canonical `[frames, 1]` shape:
 
 ```php
-[$audio, $sr] = sf_read('song.wav', always2d: true);
+[$audio, $info] = sf_read('song.wav', always2d: true);
 print_r($audio->shape());     // [441000, 1]
 ```
 
 Stereo files always produce 2D arrays regardless of the flag:
 
 ```php
-[$stereo, $sr] = sf_read('stereo.wav');
+[$stereo, $info] = sf_read('stereo.wav');
 print_r($stereo->shape());    // [441000, 2]
 ```
 

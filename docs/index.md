@@ -38,9 +38,9 @@ features:
 ```php
 use function PhpMlKit\SoundFile\{sf_read, sf_write, sf_resample};
 
-// Read an audio file — returns [NDArray, sampleRate]
-[$audio, $sr] = sf_read('input.wav');
-// $audio shape: [441000] (mono, Float32), $sr: 44100
+// Read an audio file — returns [NDArray, SfInfo]
+[$audio, $info] = sf_read('input.wav');
+// $audio shape: [441000] (mono, Float32)
 
 // Resample from 44.1kHz to 16kHz
 $audio16k = sf_resample($audio, $sr, 16000);

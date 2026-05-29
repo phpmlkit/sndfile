@@ -22,7 +22,7 @@ the full requested range.
 `blocksize` affects performance and temporary working set (not the final result).
 
 ```php
-[$x, $sr] = sf_read('input.wav', blocksize: 16384);
+[$x, $info] = sf_read('input.wav', blocksize: 16384);
 ```
 
 ## Resampling: chunked mode

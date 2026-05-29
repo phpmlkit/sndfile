@@ -24,7 +24,7 @@ function sf_read(
     ?int $stop = null,
     bool $always2d = false,
     int $blocksize = 4096,
-): array // [NDArray, int sampleRate]
+): array // [NDArray, SfInfo]
 ```
 
 **Parameters:**
@@ -37,7 +37,7 @@ function sf_read(
 | `$always2d`  | `bool`   | If `true`, mono files return `[N, 1]` instead of `[N]`. Default `false`.          |
 | `$blocksize` | `int`    | Frames per internal read chunk. Affects memory usage during read, not the result. |
 
-**Returns:** `[NDArray, int]` — the signal data (dtype matches file's native encoding) and its sample rate in Hz.
+**Returns:** `[NDArray, SfInfo]` — the signal data (dtype matches file's native encoding) and the file's full metadata.
 
 **Throws:** `SoundFileException` if the file cannot be opened or a read error occurs.
 
@@ -45,13 +45,13 @@ function sf_read(
 
 ```php
 // Read entire file
-[$audio, $sr] = sf_read('song.wav');
+[$audio, $info] = sf_read('song.wav');
 
 // Read frames 100–299 (200 frames starting at frame 100)
-[$slice, $sr] = sf_read('song.wav', start: 100, stop: 300);
+[$slice, $info] = sf_read('song.wav', start: 100, stop: 300);
 
 // Read mono file as 2D
-[$audio, $sr] = sf_read('song.wav', always2d: true);
+[$audio, $info] = sf_read('song.wav', always2d: true);
 // Shape: [frames, 1]
 ```
 

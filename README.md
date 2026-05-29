@@ -2,7 +2,7 @@
   <h1 align="center">PHP SoundFile</h1>
 </p>
 
-<p align="center">Low-level audio I/O and resampling for PHP — backed by libsndfile and libsamplerate</p>
+<p align="center">Low-level audio I/O and resampling for PHP, backed by libsndfile and libsamplerate</p>
 
 <p align="center">
   <a href="https://packagist.org/packages/phpmlkit/soundfile"><img src="https://img.shields.io/packagist/v/phpmlkit/soundfile?style=flat-square" alt="Latest Version"></a>
@@ -39,12 +39,12 @@ The package ships pre-compiled shared libraries for macOS (arm64, x86_64), Linux
 ```php
 use function PhpMlKit\SoundFile\{sf_read, sf_write, sf_info};
 
-// Read a file — returns [NDArray, sampleRate]
-[$audio, $sr] = sf_read('input.wav');
-// $audio shape: [441000] (mono, Float32), $sr: 44100
+// Read a file — returns [NDArray, SfInfo]
+[$audio, $info] = sf_read('input.wav');
+// $audio shape: [441000] (mono, Float32)
 
 // Write it back (format and subtype auto-detected from extension)
-sf_write('output.wav', $audio, $sr);
+sf_write('output.wav', $audio, $info->sampleRate);
 
 // Probe metadata without loading data
 $info = sf_info('input.wav');
@@ -142,16 +142,16 @@ function sf_read(
     ?int $stop = null,      // One past last frame (null = EOF)
     bool $always2d = false, // If true, mono returns [frames, 1] instead of [frames]
     int $blocksize = 4096,  // Chunk size for internal read loop
-): array // [NDArray, int sampleRate]
+): array // [NDArray, SfInfo]
 ```
 
-The dtype matches the file's native format. For partial reads, use `start` and `stop` to specify a frame range. With
+The dtype matches the file's native format. The returned `SfInfo` object contains the file's full metadata (frames, channels, sample rate, format, etc.). For partial reads, use `start` and `stop` to specify a frame range. With
 `$always2d = false` (default), mono files return a 1D array for convenience.
 
 ```php
-[$data, $sr] = sf_read('song.wav');
-[$part, $sr] = sf_read('song.wav', start: 44100, stop: 88200);
-[$data, $sr] = sf_read('song.wav', always2d: true);
+[$data, $info] = sf_read('song.wav');
+[$part, $info] = sf_read('song.wav', start: 44100, stop: 88200);
+[$data, $info] = sf_read('song.wav', always2d: true);
 ```
 
 #### `sf_write()`

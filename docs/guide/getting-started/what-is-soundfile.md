@@ -48,7 +48,7 @@ Use these when you want to load a whole file, save a whole file, or probe metada
 ```php
 use function PhpMlKit\SoundFile\sf_read;
 
-[$audio, $sr] = sf_read('song.wav');
+[$audio, $info] = sf_read('song.wav');
 ```
 
 The file is opened, the operation is performed, and the handle is closed — all internally.

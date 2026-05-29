@@ -14,7 +14,7 @@ Complete reference for all SoundFile classes, functions, and enums.
 
 | Function                                                    | Returns          | Description                             |
 |-------------------------------------------------------------|------------------|-----------------------------------------|
-| `sf_read(file, start?, stop?, always2d?, blocksize?)`      | `[NDArray, int]` | Read audio file into NDArray            |
+| `sf_read(file, start?, stop?, always2d?, blocksize?)`      | `[NDArray, SfInfo]` | Read audio file into NDArray            |
 | `sf_write(file, data, sampleRate, format?, subtype?)`      | `void`           | Write NDArray to audio file             |
 | `sf_info(file)`                                            | `SfInfo`    | Read file metadata without loading data |
 | `sf_check_format(format, subtype)`                         | `bool`           | Validate format/subtype compatibility   |

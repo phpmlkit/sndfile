@@ -44,10 +44,10 @@ final class FunctionsTest extends TestCase
 
     public function testReadFullFile(): void
     {
-        [$data, $sr] = sf_read($this->monoFloatWav);
+        [$data, $info] = sf_read($this->monoFloatWav);
 
         $this->assertSame([800], $data->shape());
-        $this->assertSame(8000, $sr);
+        $this->assertSame(8000, $info->sampleRate);
         $this->assertSame(DType::Float32, $data->dtype());
     }
 
@@ -120,9 +120,9 @@ final class FunctionsTest extends TestCase
         $tmp = sys_get_temp_dir().'/sw_float_'.uniqid().'.wav';
 
         sf_write($tmp, $src, 8000, AudioFormat::Wav, SampleFormat::Float);
-        [$back, $sr] = sf_read($tmp, always2d: true);
+        [$back, $info] = sf_read($tmp, always2d: true);
 
-        $this->assertSame(8000, $sr);
+        $this->assertSame(8000, $info->sampleRate);
         $srcArr = $src->toArray();
         $backArr = $back->toArray();
 

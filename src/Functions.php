@@ -30,7 +30,7 @@ use PhpMlKit\SoundFile\FFI\Libsndfile;
  * @param bool     $always2d  If true, mono files return [frames, 1] instead of [frames]
  * @param int      $blocksize Frames per internal read chunk (affects memory usage, not results)
  *
- * @return array{NDArray, int} [signal data, sample rate in Hz]
+ * @return array{NDArray, SfInfo} [signal data, file metadata]
  *
  * @throws SoundFileException If the file cannot be opened or a read error occurs
  */
@@ -51,7 +51,6 @@ function sf_read(
 
     try {
         $info = SfInfo::fromCData($sfInfo);
-        $sampleRate = $info->sampleRate;
         $channels = $info->channels;
         $totalFileFrames = $info->frames;
         $dtype = $info->sampleFormat->toDtype();
@@ -62,7 +61,7 @@ function sf_read(
         $totalFrames = max(0, $stop - $start);
 
         if ($totalFrames <= 0) {
-            return [NDArray::zeros([0, $channels], $dtype), $sampleRate];
+            return [NDArray::zeros([0, $channels], $dtype), $info];
         }
 
         if ($start > 0) {
@@ -93,11 +92,13 @@ function sf_read(
         if (!$always2d && 1 === $channels) {
             $data = $data->squeeze();
         }
+
+        $info = $info->withFrames($totalFrames);
     } finally {
         $lib->close($handle);
     }
 
-    return [$data, $sampleRate];
+    return [$data, $info];
 }
 
 /**

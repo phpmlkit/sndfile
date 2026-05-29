@@ -19,7 +19,7 @@ function sf_read(
     ?int $stop = null,
     bool $always2d = false,
     int $blocksize = 4096,
-): array // [NDArray, int sampleRate]
+): array // [NDArray, SfInfo]
 ```
 
 ### Basic usage
@@ -27,10 +27,10 @@ function sf_read(
 ```php
 use function PhpMlKit\SoundFile\sf_read;
 
-[$audio, $sr] = sf_read('song.wav');
+[$audio, $info] = sf_read('song.wav');
 ```
 
-The returned NDArray's dtype matches the file's native encoding. A WAV file stored as Pcm16 produces an Int16 array.
+The returned NDArray's dtype matches the file's native encoding. A WAV file stored as Pcm16 produces an Int16 array. The returned `SfInfo` contains the file's full metadata.
 
 ### Partial reads
 
@@ -38,13 +38,9 @@ Use `start` and `stop` to read a slice of the file without loading the entire th
 
 ```php
 // Read frames 44100 through 88199 (1 second starting at 1s in)
-[$slice, $sr] = sf_read('song.wav', start: 44100, stop: 88200);
-
-// Read from beginning to frame 1000
-[$head, $sr] = sf_read('song.wav', stop: 1000);
-
-// Read from frame 50000 to end
-[$tail, $sr] = sf_read('song.wav', start: 50000);
+[$slice, $info] = sf_read('song.wav', start: 44100, stop: 88200);
+[$head, $info] = sf_read('song.wav', stop: 1000);
+[$tail, $info] = sf_read('song.wav', start: 50000);
 ```
 
 `stop` is clipped to the file's total frame count, so passing a large value is safe.

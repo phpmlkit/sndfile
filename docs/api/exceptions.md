@@ -29,7 +29,7 @@ final class SoundFileException extends \RuntimeException {}
 use PhpMlKit\SoundFile\Exceptions\SoundFileException;
 
 try {
-    [$audio, $sr] = sf_read('song.wav');
+    [$audio, $info] = sf_read('song.wav');
 } catch (SoundFileException $e) {
     echo "Failed to read: " . $e->getMessage();
 }
