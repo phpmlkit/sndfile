@@ -1,6 +1,8 @@
 # SfInfo
 
-Immutable value object describing an audio file's metadata.
+Immutable signal properties describing an audio file — frame count,
+channel count, sample rate, container format, encoding subtype,
+seekability, and derived values.
 
 ## Properties
 
@@ -16,25 +18,6 @@ Immutable value object describing an audio file's metadata.
 
 ## Factory Methods
 
-### probe()
-
-Open a file, read the header, and close immediately.
-
-```php
-public static function probe(string $path): self
-```
-
-**Returns:** `self` with all fields populated from the file header.
-
-**Throws:** `SoundFileException` if the file cannot be opened.
-
-**Example:**
-
-```php
-$info = SfInfo::probe('song.wav');
-echo "{$info->frames} frames × {$info->channels} channels";
-```
-
 ### fromCData()
 
 Create from an already-populated libsndfile `SF_INFO` struct. Internal use.
@@ -43,7 +26,7 @@ Create from an already-populated libsndfile `SF_INFO` struct. Internal use.
 public static function fromCData(FFI\CData $sfInfo): self
 ```
 
-## Derived Values
+## Methods
 
 ### duration()
 
@@ -64,10 +47,6 @@ public function nSamples(): int
 ```
 
 Equivalent to `$frames * $channels`.
-
-## Builders
-
-Each returns a new `SfInfo` with one field changed and all others preserved.
 
 ### withFrames()
 
@@ -90,6 +69,6 @@ public function withSampleRate(int $sr): self
 **Example:**
 
 ```php
-$info = SfInfo::probe('song.wav');
+$info = sf_info('song.wav');
 $modified = $info->withSampleRate(48000)->withChannels(1);
 ```

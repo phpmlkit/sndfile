@@ -175,15 +175,54 @@ function sf_write(
 }
 
 /**
- * Quickly probe an audio file's metadata without loading its data.
+ * Read signal properties from an audio file without loading its audio data.
  *
  * Opens the file, reads the header, and closes immediately.
+ * Returns frames, channels, sample rate, format, subtype, and seekability.
+ * For embedded string tags, use sf_metadata() instead.
  *
  * @throws SoundFileException If the file cannot be opened
  */
 function sf_info(string $file): SfInfo
 {
-    return SfInfo::probe($file);
+    $lib = Libsndfile::get();
+    $sfInfo = $lib->newInfo();
+
+    $handle = $lib->open($file, FileMode::Read, $sfInfo);
+
+    if (null === $handle) {
+        throw new SoundFileException("Failed to open '{$file}': ".$lib->strError(null));
+    }
+
+    $info = SfInfo::fromCData($sfInfo);
+    $lib->close($handle);
+
+    return $info;
+}
+
+/**
+ * Read embedded string tags from an audio file without loading its audio data.
+ *
+ * Opens the file, reads the title, artist, album, genre, and other tags,
+ * then closes immediately. Each tag is null if not present in the file.
+ *
+ * @throws SoundFileException If the file cannot be opened
+ */
+function sf_metadata(string $file): SfMetadata
+{
+    $lib = Libsndfile::get();
+    $sfInfo = $lib->newInfo();
+
+    $handle = $lib->open($file, FileMode::Read, $sfInfo);
+
+    if (null === $handle) {
+        throw new SoundFileException("Failed to open '{$file}': ".$lib->strError(null));
+    }
+
+    $meta = SfMetadata::fromHandle($lib, $handle);
+    $lib->close($handle);
+
+    return $meta;
 }
 
 /**

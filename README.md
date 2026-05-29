@@ -46,7 +46,7 @@ use function PhpMlKit\SoundFile\{sf_read, sf_write, sf_info};
 // Write it back (format and subtype auto-detected from extension)
 sf_write('output.wav', $audio, $info->sampleRate);
 
-// Probe metadata without loading data
+// Probe signal properties without loading data
 $info = sf_info('input.wav');
 echo "{$info->frames} frames, {$info->channels} channels, {$info->duration()}s";
 ```
@@ -145,7 +145,7 @@ function sf_read(
 ): array // [NDArray, SfInfo]
 ```
 
-The dtype matches the file's native format. The returned `SfInfo` object contains the file's full metadata (frames, channels, sample rate, format, etc.). For partial reads, use `start` and `stop` to specify a frame range. With
+The dtype matches the file's native format. The returned `SfInfo` object contains the file's signal properties (frames, channels, sample rate, format, etc.). For partial reads, use `start` and `stop` to specify a frame range. With
 `$always2d = false` (default), mono files return a 1D array for convenience.
 
 ```php
@@ -178,10 +178,23 @@ sf_write('out.flac', $data, 44100, subtype: SampleFormat::Pcm24);
 
 #### `sf_info()`
 
-Read metadata without loading audio data. Opens the file, reads the header, and closes immediately.
+Read signal properties without loading audio data. Opens the file, reads the header, and closes immediately.
 
 ```php
 function sf_info(string $file): SfInfo
+```
+
+#### `sf_metadata()`
+
+Read string tags (title, artist, album, etc.) without loading audio data.
+
+```php
+function sf_metadata(string $file): SfMetadata
+```
+
+```php
+$meta = sf_metadata('song.wav');
+echo $meta->artist;
 ```
 
 #### `sf_check_format()`
@@ -256,7 +269,7 @@ defaults to the format's preferred).
 | `eof(): bool`                                     | Whether the position has reached the end.                        |
 | `blocks(int $size = 4096): Generator`             | Yield NDArrays of up to `$size` frames.                          |
 | `close(): void`                                   | Close the handle (called automatically by destructor).           |
-| `info(): SfInfo`                             | Full file metadata.                                              |
+| `info(): SfInfo`                             | Signal properties (frames, channels, sample rate, format).       |
 | `frames(): int`                                   | Total frames.                                                    |
 | `channels(): int`                                 | Channel count.                                                   |
 | `sampleRate(): int`                               | Sample rate in Hz.                                               |
@@ -280,7 +293,7 @@ Plus `getString(int $strType)` and `setString(int $strType, string $value)` for 
 
 #### `SfInfo`
 
-Immutable value object describing an audio file's metadata.
+Immutable signal properties describing an audio file.
 
 **Factory methods:**
 

@@ -6,16 +6,13 @@ namespace PhpMlKit\SoundFile;
 
 use FFI\CData;
 use PhpMlKit\SoundFile\Enums\AudioFormat;
-use PhpMlKit\SoundFile\Enums\FileMode;
 use PhpMlKit\SoundFile\Enums\SampleFormat;
-use PhpMlKit\SoundFile\Exceptions\SoundFileException;
 use PhpMlKit\SoundFile\FFI\Libsndfile;
 
 /**
- * Immutable metadata describing an audio file or a write target.
- *
- * Provides frame count, channel count, sample rate, container format,
- * encoding subtype, seekability, and derived values (duration, sample count).
+ * Immutable signal properties describing an audio file — frame count,
+ * channel count, sample rate, container format, encoding subtype,
+ * seekability, and derived values (duration, sample count).
  */
 final readonly class SfInfo
 {
@@ -77,32 +74,6 @@ final readonly class SfInfo
         $sfInfo->format = $this->format->value | $this->sampleFormat->value;
 
         return $sfInfo;
-    }
-
-    /**
-     * Quickly read the header of an audio file without loading its data.
-     *
-     * Opens the file, reads the SF_INFO struct, and closes immediately.
-     *
-     * @throws SoundFileException If the file cannot be opened
-     */
-    public static function probe(string $path): self
-    {
-        $lib = Libsndfile::get();
-        $sfInfo = $lib->newInfo();
-
-        $handle = $lib->open($path, FileMode::Read, $sfInfo);
-
-        if (null === $handle) {
-            throw new SoundFileException(
-                "Failed to probe '{$path}': ".$lib->strError(null)
-            );
-        }
-
-        $info = self::fromCData($sfInfo);
-        $lib->close($handle);
-
-        return $info;
     }
 
     /** Return a copy with a different frame count. */

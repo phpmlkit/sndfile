@@ -7,9 +7,10 @@ namespace PhpMlKit\SoundFile\Tests;
 use PhpMlKit\SoundFile\Enums\AudioFormat;
 use PhpMlKit\SoundFile\Enums\SampleFormat;
 use PhpMlKit\SoundFile\Exceptions\SoundFileException;
-use PhpMlKit\SoundFile\SfInfo;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
+
+use function PhpMlKit\SoundFile\sf_info;
 
 /**
  * @internal
@@ -19,7 +20,7 @@ final class SfInfoTest extends TestCase
 {
     public function testProbeReturnsCorrectMetadata(): void
     {
-        $info = SfInfo::probe(Fixtures::monoFloatWav());
+        $info = sf_info(Fixtures::monoFloatWav());
 
         $this->assertSame(800, $info->frames);
         $this->assertSame(1, $info->channels);
@@ -31,7 +32,7 @@ final class SfInfoTest extends TestCase
 
     public function testProbeStereoFile(): void
     {
-        $info = SfInfo::probe(Fixtures::stereoFloatWav());
+        $info = sf_info(Fixtures::stereoFloatWav());
 
         $this->assertSame(2, $info->channels);
         $this->assertSame(800, $info->frames);
@@ -41,26 +42,26 @@ final class SfInfoTest extends TestCase
     {
         $this->expectException(SoundFileException::class);
 
-        SfInfo::probe(sys_get_temp_dir().'/sndfile_nonexistent_'.uniqid().'.wav');
+        sf_info(sys_get_temp_dir().'/sndfile_nonexistent_'.uniqid().'.wav');
     }
 
     public function testProbeReturnsCorrectDurations(): void
     {
-        $info = SfInfo::probe(Fixtures::monoFloatWav());
+        $info = sf_info(Fixtures::monoFloatWav());
 
         $this->assertEqualsWithDelta(0.1, $info->duration(), 0.001);
     }
 
     public function testSampleCount(): void
     {
-        $info = SfInfo::probe(Fixtures::monoFloatWav());
+        $info = sf_info(Fixtures::monoFloatWav());
 
         $this->assertSame(800, $info->nSamples());
     }
 
     public function testWithFramesPreservesOtherFields(): void
     {
-        $info = SfInfo::probe(Fixtures::monoFloatWav());
+        $info = sf_info(Fixtures::monoFloatWav());
         $modified = $info->withFrames(100);
 
         $this->assertSame(100, $modified->frames);
@@ -73,7 +74,7 @@ final class SfInfoTest extends TestCase
 
     public function testWithChannelsPreservesOtherFields(): void
     {
-        $info = SfInfo::probe(Fixtures::monoFloatWav());
+        $info = sf_info(Fixtures::monoFloatWav());
         $modified = $info->withChannels(4);
 
         $this->assertSame(4, $modified->channels);
@@ -83,7 +84,7 @@ final class SfInfoTest extends TestCase
 
     public function testWithSampleRatePreservesOtherFields(): void
     {
-        $info = SfInfo::probe(Fixtures::monoFloatWav());
+        $info = sf_info(Fixtures::monoFloatWav());
         $modified = $info->withSampleRate(44100);
 
         $this->assertSame(44100, $modified->sampleRate);

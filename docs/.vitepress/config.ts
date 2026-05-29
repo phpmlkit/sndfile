@@ -70,8 +70,9 @@ export default defineConfig({
         {
           text: 'Classes',
           items: [
-            { text: 'SndFile', link: '/api/soundfile-class' },
-            { text: 'SndfileInfo', link: '/api/sf-info' },
+            { text: 'SoundFile', link: '/api/soundfile-class' },
+            { text: 'SfInfo', link: '/api/sf-info' },
+            { text: 'SfMetadata', link: '/api/sf-metadata' },
           ]
         },
         {

@@ -108,13 +108,13 @@ sf_write('out.wav', $mono, 8000); // Auto-expands to [3, 1]
 
 ## sf_info()
 
-Read file metadata without loading audio data.
+Read signal properties from an audio file without loading its audio data. Returns frames, channels, sample rate, format, and seekability. For embedded string tags, use sf_metadata() instead.
 
 ```php
 function sf_info(string $file): SfInfo
 ```
 
-**Returns:** `SfInfo` — all fields populated from the file header.
+**Returns:** `SfInfo` — all technical fields populated from the file header.
 
 **Throws:** `SoundFileException` if the file cannot be opened.
 
@@ -123,6 +123,27 @@ function sf_info(string $file): SfInfo
 ```php
 $info = sf_info('song.wav');
 echo "{$info->frames} frames, {$info->channels} channels, {$info->duration()}s";
+```
+---
+
+## sf_metadata()
+
+Read embedded string tags from an audio file without loading its audio data. Each tag is null if not present in the file.
+
+```php
+function sf_metadata(string $file): SfMetadata
+```
+
+**Returns:** `SfMetadata` — all fields populated from the file's tags. Null for any tag not present.
+
+**Throws:** `SoundFileException` if the file cannot be opened.
+
+**Example:**
+
+```php
+$meta = sf_metadata('song.wav');
+echo $meta->artist;
+echo $meta->album;
 ```
 
 ---

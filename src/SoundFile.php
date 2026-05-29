@@ -48,6 +48,7 @@ final class SoundFile
     private int $position = 0;
     private readonly Libsndfile $lib;
     private readonly FileMode $mode;
+    private ?SfMetadata $metadata = null;
 
     /**
      * Open a sound file.
@@ -330,14 +331,15 @@ final class SoundFile
         }
 
         $this->position = 0;
+        $this->metadata = null;
     }
 
     // ===================================================================
-    // Metadata
+    // Signal properties
     // ===================================================================
 
     /**
-     * Full file metadata (frames, channels, sample rate, format, etc.).
+     * Signal properties (frames, channels, sample rate, format, etc.).
      *
      * In read mode, the frame count is the file's total frames. In write
      * or read-write mode, it reflects the total frames written so far.
@@ -372,73 +374,87 @@ final class SoundFile
     }
 
     // ===================================================================
-    // String metadata (SF_STR_*)
+    // Metadata
     // ===================================================================
+
+    /**
+     * Embedded string tags from this file (title, artist, album, etc.).
+     *
+     * Returns null if closed.
+     */
+    public function metadata(): ?SfMetadata
+    {
+        if (null === $this->handle) {
+            return null;
+        }
+
+        return $this->metadata ??= SfMetadata::fromHandle($this->lib, $this->handle);
+    }
 
     /** Title tag. */
     public function title(): ?string
     {
-        return $this->getString(0x01);
+        return $this->metadata ? $this->metadata()?->title : $this->getString(0x01);
     }
 
     /** Copyright tag. */
     public function copyright(): ?string
     {
-        return $this->getString(0x02);
+        return $this->metadata ? $this->metadata()?->copyright : $this->getString(0x02);
     }
 
     /** Encoder software tag. */
     public function software(): ?string
     {
-        return $this->getString(0x03);
+        return $this->metadata ? $this->metadata()?->software : $this->getString(0x03);
     }
 
     /** Artist tag. */
     public function artist(): ?string
     {
-        return $this->getString(0x04);
+        return $this->metadata ? $this->metadata()?->artist : $this->getString(0x04);
     }
 
     /** Comment tag. */
     public function comment(): ?string
     {
-        return $this->getString(0x05);
+        return $this->metadata ? $this->metadata()?->comment : $this->getString(0x05);
     }
 
     /** Date tag. */
     public function date(): ?string
     {
-        return $this->getString(0x06);
+        return $this->metadata ? $this->metadata()?->date : $this->getString(0x06);
     }
 
     /** Album tag. */
     public function album(): ?string
     {
-        return $this->getString(0x07);
+        return $this->metadata ? $this->metadata()?->album : $this->getString(0x07);
     }
 
     /** License tag. */
     public function license(): ?string
     {
-        return $this->getString(0x08);
+        return $this->metadata ? $this->metadata()?->license : $this->getString(0x08);
     }
 
     /** Track number tag. */
     public function trackNumber(): ?string
     {
-        return $this->getString(0x09);
+        return $this->metadata ? $this->metadata()?->trackNumber : $this->getString(0x09);
     }
 
     /** Genre tag. */
     public function genre(): ?string
     {
-        return $this->getString(0x10);
+        return $this->metadata ? $this->metadata()?->genre : $this->getString(0x10);
     }
 
     /**
-     * Read an arbitrary string metadata field.
+     * Read an embedded tag by its code.
      *
-     * @param int $strType SF_STR_* constant (e.g. 0x01 = Title, 0x04 = Artist)
+     * @param int $strType Tag code (0x01 = Title, 0x04 = Artist, etc.)
      */
     public function getString(int $strType): ?string
     {
@@ -446,11 +462,9 @@ final class SoundFile
     }
 
     /**
-     * Write an arbitrary string metadata field.
+     * Write an embedded tag.
      *
-     * @param int $strType SF_STR_* constant
-     *
-     * @throws SoundFileException If the file is closed
+     * @throws SoundFileException If the handle is closed
      */
     public function setString(int $strType, string $value): void
     {
@@ -459,6 +473,7 @@ final class SoundFile
         }
 
         $this->lib->setString($this->handle, $strType, $value);
+        $this->metadata = null;
     }
 
     /** @see setString() */

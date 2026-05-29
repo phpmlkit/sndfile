@@ -30,7 +30,7 @@ use function PhpMlKit\SoundFile\sf_read;
 [$audio, $info] = sf_read('song.wav');
 ```
 
-The returned NDArray's dtype matches the file's native encoding. A WAV file stored as Pcm16 produces an Int16 array. The returned `SfInfo` contains the file's full metadata.
+The returned NDArray's dtype matches the file's native encoding. A WAV file stored as Pcm16 produces an Int16 array. The returned `SfInfo` contains the file's signal properties.
 
 ### Partial reads
 
@@ -142,9 +142,9 @@ sf_check_format(AudioFormat::Wav, SampleFormat::Pcm16); // true
 sf_check_format(AudioFormat::Ogg, SampleFormat::Pcm16); // false
 ```
 
-## Probe Metadata (`sf_info()`)
+## Signal Properties (`sf_info()`)
 
-Reads file metadata without loading audio data:
+Reads a file's technical properties without loading its audio data:
 
 ```php
 use function PhpMlKit\SoundFile\sf_info;
@@ -159,4 +159,22 @@ $info->sampleFormat; // SampleFormat
 $info->seekable;     // bool — whether seeking is supported
 $info->duration();   // float — duration in seconds
 $info->nSamples();   // int — frames × channels
+```
+
+## Embedded Tags (`sf_metadata()`)
+
+Reads embedded string tags without loading audio data:
+
+```php
+use function PhpMlKit\SoundFile\sf_metadata;
+
+$meta = sf_metadata('song.wav');
+
+$meta->title;   // ?string
+$meta->artist;  // ?string
+$meta->album;   // ?string
+$meta->genre;   // ?string
+```
+
+Tags not present in the file return null. For reading and writing tags on open handles, see [Metadata](/guide/fundamentals/metadata).
 ```
