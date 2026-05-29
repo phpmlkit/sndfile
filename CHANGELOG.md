@@ -5,6 +5,17 @@ All notable changes to `phpmlkit/sndfile` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.0 - 2026-05-29
+
+### What's Changed
+
+- `sf_read()` now returns `[NDArray, SfInfo]` instead of `[NDArray, int]`.
+- Added `SfMetadata` class and `sf_metadata()` for one-off reading of embedded tags
+- Clarify terminology for signal properties vs embedded tags
+- Make a platform package
+
+**Full Changelog**: https://github.com/phpmlkit/soundfile/compare/1.0.0...1.1.0
+
 ## v1.0.0 - 2026-05-29
 
 ### Initial release
