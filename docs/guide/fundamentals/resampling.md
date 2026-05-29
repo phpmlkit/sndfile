@@ -1,11 +1,11 @@
 # Resampling
 
-`snd_resample()` converts an NDArray from one sample rate to another using libsamplerate.
+`sf_resample()` converts an NDArray from one sample rate to another using libsamplerate.
 
 ## Full Signature
 
 ```php
-function snd_resample(
+function sf_resample(
     NDArray $input,
     int $inputRate,
     int $outputRate,
@@ -22,13 +22,13 @@ When `$chunkSize` is non-null, the function processes the input signal in chunks
 filled chunk by chunk, then wrapped in a single NDArray at the end. This is safe for large signals.
 
 ```php
-$y = snd_resample($x, 44100, 16000); // default chunkSize = 2048
+$y = sf_resample($x, 44100, 16000); // default chunkSize = 2048
 ```
 
 You can control chunk size (in frames):
 
 ```php
-$y = snd_resample($x, 44100, 16000, chunkSize: 8192);
+$y = sf_resample($x, 44100, 16000, chunkSize: 8192);
 ```
 
 
@@ -37,7 +37,7 @@ $y = snd_resample($x, 44100, 16000, chunkSize: 8192);
 When `$chunkSize` is `null`, the function process the input signal in a single pass. This is best for small signals where the convenience outweighs the memory trade-off.
 
 ```php
-$resampled = snd_resample($audio, 44100, 8000, chunkSize: null);
+$resampled = sf_resample($audio, 44100, 8000, chunkSize: null);
 ```
 
 Both modes produce identical output for the same input and ratio.
@@ -54,10 +54,10 @@ Four quality levels trade CPU time for frequency response accuracy:
 | `ResampleQuality::Linear`  | Linear interpolation               | Minimum latency, low quality |
 
 ```php
-use PhpMlKit\Sndfile\Enums\ResampleQuality;
+use PhpMlKit\SoundFile\Enums\ResampleQuality;
 
-$high = snd_resample($audio, 44100, 48000, quality: ResampleQuality::Best);
-$fast = snd_resample($audio, 44100, 48000, quality: ResampleQuality::Fastest);
+$high = sf_resample($audio, 44100, 48000, quality: ResampleQuality::Best);
+$fast = sf_resample($audio, 44100, 48000, quality: ResampleQuality::Fastest);
 ```
 
 ## DType Handling
@@ -68,7 +68,7 @@ different dtype:
 ```php
 // Int16 input — automatically converted to Float32
 $audio = NDArray::array([[100], [200], [300]], DType::Int16);
-$resampled = snd_resample($audio, 8000, 16000);
+$resampled = sf_resample($audio, 8000, 16000);
 // $resampled->dtype() === DType::Float32
 ```
 
@@ -80,7 +80,7 @@ Stereo and multi-channel inputs are resampled with all channels preserved:
 
 ```php
 $stereo = NDArray::array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], DType::Float32);
-$resampled = snd_resample($stereo, 8000, 16000);
+$resampled = sf_resample($stereo, 8000, 16000);
 // Shape: [6, 2] — both channels resampled independently
 ```
 

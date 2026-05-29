@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\Tests;
+namespace PhpMlKit\SoundFile\Tests;
 
 use PhpMlKit\NDArray\DType;
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 

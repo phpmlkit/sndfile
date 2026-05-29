@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile;
+namespace PhpMlKit\SoundFile;
 
 use PhpMlKit\NDArray\DType;
 use PhpMlKit\NDArray\NDArray;
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\FileMode;
-use PhpMlKit\Sndfile\Enums\ResampleQuality;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
-use PhpMlKit\Sndfile\Exceptions\SndfileException;
-use PhpMlKit\Sndfile\FFI\Libsamplerate;
-use PhpMlKit\Sndfile\FFI\Libsndfile;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\FileMode;
+use PhpMlKit\SoundFile\Enums\ResampleQuality;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
+use PhpMlKit\SoundFile\Exceptions\SoundFileException;
+use PhpMlKit\SoundFile\FFI\Libsamplerate;
+use PhpMlKit\SoundFile\FFI\Libsndfile;
 
 /**
  * Read an audio file into a single NDArray.
@@ -32,9 +32,9 @@ use PhpMlKit\Sndfile\FFI\Libsndfile;
  *
  * @return array{NDArray, int} [signal data, sample rate in Hz]
  *
- * @throws SndfileException If the file cannot be opened or a read error occurs
+ * @throws SoundFileException If the file cannot be opened or a read error occurs
  */
-function snd_read(
+function sf_read(
     string $file,
     ?int $start = null,
     ?int $stop = null,
@@ -46,11 +46,11 @@ function snd_read(
     $handle = $lib->open($file, FileMode::Read, $sfInfo);
 
     if (null === $handle) {
-        throw new SndfileException("Failed to open '{$file}': ".$lib->strError(null));
+        throw new SoundFileException("Failed to open '{$file}': ".$lib->strError(null));
     }
 
     try {
-        $info = SndfileInfo::fromSfInfo($sfInfo);
+        $info = SfInfo::fromCData($sfInfo);
         $sampleRate = $info->sampleRate;
         $channels = $info->channels;
         $totalFileFrames = $info->frames;
@@ -114,9 +114,9 @@ function snd_read(
  * @param null|AudioFormat  $format     Output container format (default: inferred from extension)
  * @param null|SampleFormat $subtype    Output encoding subtype (default: format's preferred)
  *
- * @throws SndfileException If the format is invalid, the file cannot be opened, or a write error occurs
+ * @throws SoundFileException If the format is invalid, the file cannot be opened, or a write error occurs
  */
-function snd_write(
+function sf_write(
     string $file,
     NDArray $data,
     int $sampleRate,
@@ -132,12 +132,12 @@ function snd_write(
     $channels = $shape[1] ?? 1;
 
     $format ??= AudioFormat::fromPath($file)
-        ?? throw new SndfileException("Cannot determine format for '{$file}'");
+        ?? throw new SoundFileException("Cannot determine format for '{$file}'");
 
     $subtype ??= $format->defaultSampleFormat();
 
-    if (!snd_check_format($format, $subtype)) {
-        throw new SndfileException(
+    if (!sf_check_format($format, $subtype)) {
+        throw new SoundFileException(
             "Incompatible format/subtype: {$format->name} + {$subtype->name}"
         );
     }
@@ -146,14 +146,13 @@ function snd_write(
     $dataOut = $dtype === $data->dtype() ? $data : $data->astype($dtype);
 
     $lib = Libsndfile::get();
-    $sfInfo = $lib->newInfo();
-    $writeInfo = SndfileInfo::forWrite($frames, $channels, $sampleRate, $format, $subtype);
-    $writeInfo->populateSfInfo($sfInfo);
 
-    $handle = $lib->open($file, FileMode::Write, $sfInfo);
+    $writeInfo = new SfInfo(0, $channels, $sampleRate, $format, $subtype);
+
+    $handle = $lib->open($file, FileMode::Write, $writeInfo->toCData($lib));
 
     if (null === $handle) {
-        throw new SndfileException("Failed to open '{$file}' for writing: ".$lib->strError(null));
+        throw new SoundFileException("Failed to open '{$file}' for writing: ".$lib->strError(null));
     }
 
     try {
@@ -165,7 +164,7 @@ function snd_write(
         $written = $writeFn($lib, $handle, $buffer, $frames);
 
         if ($written !== $frames) {
-            throw new SndfileException(
+            throw new SoundFileException(
                 "Write error: wrote {$written}/{$frames} frames: ".$lib->strError($handle)
             );
         }
@@ -179,11 +178,11 @@ function snd_write(
  *
  * Opens the file, reads the header, and closes immediately.
  *
- * @throws SndfileException If the file cannot be opened
+ * @throws SoundFileException If the file cannot be opened
  */
-function snd_info(string $file): SndfileInfo
+function sf_info(string $file): SfInfo
 {
-    return SndfileInfo::probe($file);
+    return SfInfo::probe($file);
 }
 
 /**
@@ -191,7 +190,7 @@ function snd_info(string $file): SndfileInfo
  *
  * @return bool True if the combination can be written
  */
-function snd_check_format(AudioFormat $format, SampleFormat $subtype): bool
+function sf_check_format(AudioFormat $format, SampleFormat $subtype): bool
 {
     $lib = Libsndfile::get();
     $info = $lib->newInfo();
@@ -222,9 +221,9 @@ function snd_check_format(AudioFormat $format, SampleFormat $subtype): bool
  *
  * @return NDArray Resampled signal of shape [newFrames, channels]
  *
- * @throws SndfileException If the resampler fails or produces zero output
+ * @throws SoundFileException If the resampler fails or produces zero output
  */
-function snd_resample(
+function sf_resample(
     NDArray $input,
     int $inputRate,
     int $outputRate,
@@ -259,7 +258,7 @@ function snd_resample(
         $err = $lib->simple($data, $quality, $channels);
 
         if (0 !== $err) {
-            throw new SndfileException($lib->strError($err));
+            throw new SoundFileException($lib->strError($err));
         }
 
         $actualOut = (int) $data->output_frames_gen;
@@ -274,7 +273,7 @@ function snd_resample(
     if (null === $state) {
         \assert(\is_int($outError->cdata), 'Unexpected error code type from libsamplerate');
 
-        throw new SndfileException($lib->strError($outError->cdata));
+        throw new SoundFileException($lib->strError($outError->cdata));
     }
 
     $inputBuffer = $f32->toBuffer();
@@ -314,7 +313,7 @@ function snd_resample(
         if (0 !== $err) {
             $lib->deleteState($state);
 
-            throw new SndfileException($lib->strError($err));
+            throw new SoundFileException($lib->strError($err));
         }
 
         $inputFramesUsed = (int) $data->input_frames_used;
@@ -334,7 +333,7 @@ function snd_resample(
     $totalOutputFrames = (int) ($outputOffset / $channels);
 
     if (0 === $totalOutputFrames) {
-        throw new SndfileException('Resampling produced zero frames');
+        throw new SoundFileException('Resampling produced zero frames');
     }
 
     return NDArray::fromBuffer($outputBuffer, [$totalOutputFrames, $channels], DType::Float32);

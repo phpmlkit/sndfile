@@ -27,11 +27,11 @@ If installation did not include the correct binaries:
 
 - verify your platform is supported (macOS arm64/x86_64, Linux arm64/x86_64, Windows x64)
 - clear composer cache: `composer clear-cache`
-- reinstall: `composer require phpmlkit/sndfile`
+- reinstall: `composer require phpmlkit/soundfile`
 
 ## “Library file not found” / “Header file not found”
 
-These errors come from `PhpMlKit\Sndfile\FFI\NativeLibrary`.
+These errors come from `PhpMlKit\SoundFile\FFI\NativeLibrary`.
 
 They usually indicate:
 
@@ -48,31 +48,31 @@ Fix:
 - or pass `AudioFormat` explicitly:
 
 ```php
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use function PhpMlKit\Sndfile\snd_write;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use function PhpMlKit\SoundFile\sf_write;
 
-snd_write('output.audio', $x, 44100, format: AudioFormat::Wav);
+sf_write('output.audio', $x, 44100, format: AudioFormat::Wav);
 ```
 
 ## “Incompatible format/subtype”
 
 Not all format/subtype combinations are writable. Example: OGG + PCM16 is invalid.
 
-Use `snd_check_format()` to validate:
+Use `sf_check_format()` to validate:
 
 ```php
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
-use function PhpMlKit\Sndfile\snd_check_format;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
+use function PhpMlKit\SoundFile\sf_check_format;
 
-if (!snd_check_format(AudioFormat::Ogg, SampleFormat::Pcm16)) {
+if (!sf_check_format(AudioFormat::Ogg, SampleFormat::Pcm16)) {
     // pick Vorbis instead
 }
 ```
 
 ## Seek errors
 
-If a file is not seekable, `SndFile::seek()` throws:
+If a file is not seekable, `SoundFile::seek()` throws:
 
 - “This file does not support seeking”
 

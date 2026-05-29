@@ -1,25 +1,25 @@
-# Streaming with SndFile
+# Streaming with SoundFile
 
-The `SndFile` class gives you fine-grained control over audio file access. Unlike the global functions which open, operate, and close in one shot, an `SndFile` instance stays open, while you can read in chunks, write in stages, seek back and forth, or iterate block by block. The handle is closed automatically when the object is destroyed, but you can call `close()` yourself to release it earlier.
+The `SoundFile` class gives you fine-grained control over audio file access. Unlike the global functions which open, operate, and close in one shot, an `SoundFile` instance stays open, while you can read in chunks, write in stages, seek back and forth, or iterate block by block. The handle is closed automatically when the object is destroyed, but you can call `close()` yourself to release it earlier.
 
 ## Opening files
 
-You can open a file by creating a new instance of `SndFile` class and passing the path to the file, the file mode and other optional parameters depending on the mode. 
+You can open a file by creating a new instance of `SoundFile` class and passing the path to the file, the file mode and other optional parameters depending on the mode. 
 
 ```php
-use PhpMlKit\Sndfile\SndFile;
-use PhpMlKit\Sndfile\Enums\FileMode;
+use PhpMlKit\SoundFile\SoundFile;
+use PhpMlKit\SoundFile\Enums\FileMode;
 
-$read = new SndFile('input.wav', FileMode::Read);
+$read = new SoundFile('input.wav', FileMode::Read);
 ```
 
 For writing, you typically provide `sampleRate` and (optionally) channels/format/subtype:
 
 ```php
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
 
-$write = new SndFile(
+$write = new SoundFile(
     'output.wav',
     FileMode::Write,
     sampleRate: 44100,
@@ -34,10 +34,10 @@ preferred subtype.
 
 ## Reading
 
-Open a file in read mode and start pulling frames. The file **MUST** exist else the constructor throws a `SndfileException`. Each call to `read()` returns the next chunk and advances the internal position.
+Open a file in read mode and start pulling frames. The file **MUST** exist else the constructor throws a `SoundFileException`. Each call to `read()` returns the next chunk and advances the internal position.
 
 ```php
-$sf = new SndFile('song.wav', FileMode::Read);
+$sf = new SoundFile('song.wav', FileMode::Read);
 
 // Read the first 512 frames
 $intro = $sf->read(512);
@@ -60,7 +60,7 @@ If you ask for more frames than remain, you get what's left — no error, just a
 You can check progress with `tell()` and `eof()`:
 
 ```php
-$sf = new SndFile('song.wav', FileMode::Read);
+$sf = new SoundFile('song.wav', FileMode::Read);
 
 while (!$sf->eof()) {
     $chunk = $sf->read(1024);
@@ -73,7 +73,7 @@ while (!$sf->eof()) {
 While you can use `eof` to read in chunks using the `while` loop, the `blocks()` method provides a much convenient generator so you can iterate with a `foreach` loop. Each yield is an NDArray of up to the requested size; the generator ends when the file is exhausted.
 
 ```php
-$sf = new SndFile('large-file.wav', FileMode::Read);
+$sf = new SoundFile('large-file.wav', FileMode::Read);
 
 foreach ($sf->blocks(4096) as $block) {
     processBlock($block);
@@ -92,7 +92,7 @@ Write mode lets you build a file incrementally. If the file doesn't exist, it's 
 The channel count of the data **MUST** match the channel count passed when creating the file.
 
 ```php
-$out = new SndFile('output.wav', FileMode::Write,
+$out = new SoundFile('output.wav', FileMode::Write,
     sampleRate: 44100, channels: 2,
 );
 
@@ -123,14 +123,14 @@ $sf->seek(100, \SEEK_CUR);      // Advance 100 frames from current position
 $sf->seek(-50, \SEEK_END);      // 50 frames before the end
 ```
 
-After seeking, the next `read()` or `write()` continues from the new position. If a file is not seekable, `seek()` throws `SndfileException`.
+After seeking, the next `read()` or `write()` continues from the new position. If a file is not seekable, `seek()` throws `SoundFileException`.
 
 ## Read-Write Mode
 
 `FileMode::ReadWrite` lets you read and write on the same handle. The file must already exist — open an existing file, write to it, seek back, and read what you wrote.
 
 ```php
-$sf = new SndFile('file.wav', FileMode::ReadWrite,
+$sf = new SoundFile('file.wav', FileMode::ReadWrite,
     sampleRate: 8000);
 
 // Append some audio
@@ -165,13 +165,13 @@ use function PhpMlKit\NDArray\arange;
 $sr = 8000;
 $freq = 440;
 
-$out = new SndFile('tone.wav', FileMode::Write,
+$out = new SoundFile('tone.wav', FileMode::Write,
     sampleRate: $sr, channels: 1,
     format: AudioFormat::Wav, subtype: SampleFormat::Float,
 );
 
 $out->setTitle('Generated Tone');
-$out->setArtist('SndFile');
+$out->setArtist('SoundFile');
 
 $sine = arange(0, 400, 1, DType::Float32)
             ->multiply(2 * \M_PI * $freq / $sr)

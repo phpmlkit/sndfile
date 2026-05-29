@@ -1,10 +1,10 @@
-# SndFile
+# SoundFile
 
 An opened audio file handle for streaming read/write with seeking and block iteration.
 
 ## Overview
 
-`SndFile` wraps a libsndfile `SNDFILE*` handle. In read mode, metadata is read from the file header. In write mode, you
+`SoundFile` wraps a libsndfile `SNDFILE*` handle. In read mode, metadata is read from the file header. In write mode, you
 provide the metadata and the constructor validates the format combination.
 
 The handle is closed automatically by the destructor but should be closed explicitly in long-running processes.
@@ -12,7 +12,7 @@ The handle is closed automatically by the destructor but should be closed explic
 ## Constructor
 
 ```php
-new SndFile(
+new SoundFile(
     string $path,
     FileMode $mode = FileMode::Read,
     // Write-mode parameters:
@@ -34,16 +34,16 @@ new SndFile(
 | `$format`     | `?AudioFormat`  | Container format (write mode; default: inferred from extension) |
 | `$subtype`    | `?SampleFormat` | Encoding subtype (write mode; default: format's preferred)      |
 
-**Throws:** `SndfileException` if the file cannot be opened or the format/subtype combination is invalid.
+**Throws:** `SoundFileException` if the file cannot be opened or the format/subtype combination is invalid.
 
 **Examples:**
 
 ```php
 // Read mode
-$sf = new SndFile('input.wav', FileMode::Read);
+$sf = new SoundFile('input.wav', FileMode::Read);
 
 // Write mode with explicit format
-$sf = new SndFile('output.wav', FileMode::Write,
+$sf = new SoundFile('output.wav', FileMode::Write,
     sampleRate: 44100,
     channels: 2,
     format: AudioFormat::Wav,
@@ -51,7 +51,7 @@ $sf = new SndFile('output.wav', FileMode::Write,
 );
 
 // Write mode — format inferred from extension
-$sf = new SndFile('output.flac', FileMode::Write,
+$sf = new SoundFile('output.flac', FileMode::Write,
     sampleRate: 48000,
     channels: 1,
 );
@@ -76,7 +76,7 @@ public function read(?int $numFrames = null): NDArray
 
 **Returns:** `NDArray` of shape `[framesRead, channels]` in the file's native dtype.
 
-**Throws:** `SndfileException` if the handle is closed, opened in write-only mode, or a read error occurs.
+**Throws:** `SoundFileException` if the handle is closed, opened in write-only mode, or a read error occurs.
 
 **Example:**
 
@@ -103,7 +103,7 @@ public function write(NDArray $data): void
 |-----------|-----------|-------------------------------------------------------------------------------------------------------------------|
 | `$data`   | `NDArray` | Data of shape `[N, channels]` where `channels` matches the file's channel count. `N` can be any positive integer. |
 
-**Throws:** `SndfileException` if the handle is closed, opened in read-only mode, channels mismatch, or a write error
+**Throws:** `SoundFileException` if the handle is closed, opened in read-only mode, channels mismatch, or a write error
 occurs.
 
 **Example:**
@@ -132,7 +132,7 @@ public function seek(int $frameOffset, int $whence = SEEK_SET): void
 | `$frameOffset` | `int` | Target frame offset                               |
 | `$whence`      | `int` | `SEEK_SET` (0), `SEEK_CUR` (1), or `SEEK_END` (2) |
 
-**Throws:** `SndfileException` if the handle is closed, seeking is not supported, or the seek fails.
+**Throws:** `SoundFileException` if the handle is closed, seeking is not supported, or the seek fails.
 
 ---
 
@@ -174,7 +174,7 @@ public function close(): void
 Full file metadata. In write mode, the frame count reflects total frames written so far.
 
 ```php
-public function info(): SndfileInfo
+public function info(): SfInfo
 ```
 
 ### frames()
@@ -256,7 +256,7 @@ Called automatically by the destructor.
 Full file metadata.
 
 ```php
-public function info(): SndfileInfo
+public function info(): SfInfo
 ```
 
 ### frames()

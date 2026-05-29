@@ -1,4 +1,4 @@
-# Contributing to SndFile
+# Contributing to SoundFile
 
 Thanks for your interest in contributing! This document outlines the process for making changes.
 
@@ -6,7 +6,7 @@ Thanks for your interest in contributing! This document outlines the process for
 
 ```bash
 # Clone the repository
-git clone https://github.com/phpmlkit/sndfile.git
+git clone https://github.com/phpmlkit/soundfile.git
 cd sndfile
 
 # Install PHP dependencies

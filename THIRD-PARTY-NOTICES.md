@@ -18,4 +18,4 @@ Use of libraries under the terms of the LGPL is via the
 "any later version" clause of the LGPL.
 
 Please report any errors or omissions via
-https://github.com/phpmlkit/sndfile/issues/new
+https://github.com/phpmlkit/soundfile/issues/new

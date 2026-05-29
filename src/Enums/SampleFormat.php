@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\Enums;
+namespace PhpMlKit\SoundFile\Enums;
 
 use PhpMlKit\NDArray\DType;
 
@@ -12,7 +12,7 @@ use PhpMlKit\NDArray\DType;
  * Values match SF_FORMAT_* constants bitmasked against SF_FORMAT_SUBMASK (0x0000FFFF).
  * The full sf format is $format->value | $subtype->value.
  *
- * Not all subtypes are compatible with every format. Use snd_check_format()
+ * Not all subtypes are compatible with every format. Use sf_check_format()
  * to validate a combination before writing.
  */
 enum SampleFormat: int

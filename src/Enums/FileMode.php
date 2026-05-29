@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\Enums;
+namespace PhpMlKit\SoundFile\Enums;
 
 /**
  * File open mode constants matching libsndfile's SFM_READ / SFM_WRITE / SFM_RDWR.

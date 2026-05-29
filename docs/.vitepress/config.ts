@@ -1,10 +1,10 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'PHP SndFile',
-  description: 'Low-level audio I/O and resampling for PHP — backed by libsndfile and libsamplerate',
+  title: 'PHP Soundfile',
+  description: 'Low-level audio I/O and resampling for PHP — backed by libsoundfile and libsamplerate',
 
-  base: '/sndfile/',
+  base: '/soundfile/',
 
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
@@ -16,13 +16,13 @@ export default defineConfig({
 
   themeConfig: {
     nav: [
-      { text: 'User Guide', link: '/guide/getting-started/what-is-sndfile' },
+      { text: 'User Guide', link: '/guide/getting-started/what-is-soundfile' },
       { text: 'API Reference', link: '/api/' },
       {
         text: '1.0.0',
         items: [
           { text: 'Changelog', link: '/changelog' },
-          { text: 'GitHub', link: 'https://github.com/phpmlkit/sndfile' },
+          { text: 'GitHub', link: 'https://github.com/phpmlkit/soundfile' },
         ]
       }
     ],
@@ -33,7 +33,7 @@ export default defineConfig({
           text: 'Getting Started',
           collapsed: false,
           items: [
-            { text: 'What is SndFile?', link: '/guide/getting-started/what-is-sndfile' },
+            { text: 'What is SndFile?', link: '/guide/getting-started/what-is-soundfile' },
             { text: 'Installation', link: '/guide/getting-started/installation' },
             { text: 'Quick Start', link: '/guide/getting-started/quick-start' },
           ]
@@ -43,7 +43,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'Reading and Writing', link: '/guide/fundamentals/reading-and-writing' },
-            { text: 'Streaming with SndFile', link: '/guide/fundamentals/streaming-with-sndfile' },
+            { text: 'Streaming with SndFile', link: '/guide/fundamentals/streaming-with-soundfile' },
             { text: 'Resampling', link: '/guide/fundamentals/resampling' },
             { text: 'Formats and DTypes', link: '/guide/fundamentals/formats-and-dtypes' },
             { text: 'Metadata', link: '/guide/fundamentals/metadata' },
@@ -70,8 +70,8 @@ export default defineConfig({
         {
           text: 'Classes',
           items: [
-            { text: 'SndFile', link: '/api/sndfile-class' },
-            { text: 'SndfileInfo', link: '/api/sndfile-info' },
+            { text: 'SndFile', link: '/api/soundfile-class' },
+            { text: 'SndfileInfo', link: '/api/sf-info' },
           ]
         },
         {
@@ -85,7 +85,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/phpmlkit/sndfile' },
+      { icon: 'github', link: 'https://github.com/phpmlkit/soundfile' },
     ],
 
     footer: {
@@ -98,7 +98,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/phpmlkit/sndfile/edit/main/docs/:path',
+      pattern: 'https://github.com/phpmlkit/soundfile/edit/main/docs/:path',
       text: 'Edit this page on GitHub'
     },
 

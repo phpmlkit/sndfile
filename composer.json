@@ -1,5 +1,5 @@
 {
-    "name": "phpmlkit/sndfile",
+    "name": "phpmlkit/soundfile",
     "description": "Low-level libsndfile + libsamplerate bindings for PHP via FFI",
     "type": "library",
     "license": "MIT",
@@ -21,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "PhpMlKit\\Sndfile\\": "src/"
+            "PhpMlKit\\SoundFile\\": "src/"
         },
         "files": [
             "src/Functions.php"
@@ -29,16 +29,16 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "PhpMlKit\\Sndfile\\Tests\\": "tests/"
+            "PhpMlKit\\SoundFile\\Tests\\": "tests/"
         }
     },
     "extra": {
         "artifacts": {
-            "darwin-arm64": "https://github.com/phpmlkit/sndfile/releases/download/{version}/dist-darwin-arm64.tar.gz",
-            "darwin-x86_64": "https://github.com/phpmlkit/sndfile/releases/download/{version}/dist-darwin-x86_64.tar.gz",
-            "linux-x86_64": "https://github.com/phpmlkit/sndfile/releases/download/{version}/dist-linux-x86_64.tar.gz",
-            "linux-arm64": "https://github.com/phpmlkit/sndfile/releases/download/{version}/dist-linux-arm64.tar.gz",
-            "windows-64": "https://github.com/phpmlkit/sndfile/releases/download/{version}/dist-windows-64.zip"
+            "darwin-arm64": "https://github.com/phpmlkit/soundfile/releases/download/{version}/dist-darwin-arm64.tar.gz",
+            "darwin-x86_64": "https://github.com/phpmlkit/soundfile/releases/download/{version}/dist-darwin-x86_64.tar.gz",
+            "linux-x86_64": "https://github.com/phpmlkit/soundfile/releases/download/{version}/dist-linux-x86_64.tar.gz",
+            "linux-arm64": "https://github.com/phpmlkit/soundfile/releases/download/{version}/dist-linux-arm64.tar.gz",
+            "windows-64": "https://github.com/phpmlkit/soundfile/releases/download/{version}/dist-windows-64.zip"
         }
     },
     "scripts": {

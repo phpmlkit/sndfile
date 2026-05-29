@@ -1,24 +1,24 @@
 # Global Functions
 
-All global functions live in the `PhpMlKit\Sndfile` namespace and are importable with `use function`.
+All global functions live in the `PhpMlKit\SoundFile` namespace and are importable with `use function`.
 
 ## Importing
 
 ```php
-use function PhpMlKit\Sndfile\snd_read;
-use function PhpMlKit\Sndfile\snd_write;
-use function PhpMlKit\Sndfile\{snd_read, snd_write, snd_resample};
+use function PhpMlKit\SoundFile\sf_read;
+use function PhpMlKit\SoundFile\sf_write;
+use function PhpMlKit\SoundFile\{sf_read, sf_write, sf_resample};
 ```
 
 ---
 
-## snd_read()
+## sf_read()
 
 Read an audio file into a single NDArray. Opens the file, reads data in chunks via a single pre-allocated buffer, and
 closes automatically.
 
 ```php
-function snd_read(
+function sf_read(
     string $file,
     ?int $start = null,
     ?int $stop = null,
@@ -39,31 +39,31 @@ function snd_read(
 
 **Returns:** `[NDArray, int]` — the signal data (dtype matches file's native encoding) and its sample rate in Hz.
 
-**Throws:** `SndfileException` if the file cannot be opened or a read error occurs.
+**Throws:** `SoundFileException` if the file cannot be opened or a read error occurs.
 
 **Examples:**
 
 ```php
 // Read entire file
-[$audio, $sr] = snd_read('song.wav');
+[$audio, $sr] = sf_read('song.wav');
 
 // Read frames 100–299 (200 frames starting at frame 100)
-[$slice, $sr] = snd_read('song.wav', start: 100, stop: 300);
+[$slice, $sr] = sf_read('song.wav', start: 100, stop: 300);
 
 // Read mono file as 2D
-[$audio, $sr] = snd_read('song.wav', always2d: true);
+[$audio, $sr] = sf_read('song.wav', always2d: true);
 // Shape: [frames, 1]
 ```
 
 ---
 
-## snd_write()
+## sf_write()
 
 Write an NDArray to an audio file. Format is inferred from the file extension when not specified. DType is
 auto-converted to match the target subtype.
 
 ```php
-function snd_write(
+function sf_write(
     string $file,
     NDArray $data,
     int $sampleRate,
@@ -82,57 +82,57 @@ function snd_write(
 | `$format`     | `?AudioFormat`  | Container format. `null` = inferred from extension.                     |
 | `$subtype`    | `?SampleFormat` | Encoding subtype. `null` = format's default.                            |
 
-**Throws:** `SndfileException` if the format/subtype combination is invalid or a write error occurs.
+**Throws:** `SoundFileException` if the format/subtype combination is invalid or a write error occurs.
 
 **Examples:**
 
 ```php
 // Simple write — format and subtype auto-detected
-snd_write('output.wav', $audio, sampleRate: 44100);
+sf_write('output.wav', $audio, sampleRate: 44100);
 
 // Explicit format and subtype
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
 
-snd_write('output.flac', $audio, 44100,
+sf_write('output.flac', $audio, 44100,
     format: AudioFormat::Flac,
     subtype: SampleFormat::Pcm24,
 );
 
 // 1D input works
 $mono = NDArray::array([0.1, 0.2, 0.3], DType::Float32);
-snd_write('out.wav', $mono, 8000); // Auto-expands to [3, 1]
+sf_write('out.wav', $mono, 8000); // Auto-expands to [3, 1]
 ```
 
 ---
 
-## snd_info()
+## sf_info()
 
 Read file metadata without loading audio data.
 
 ```php
-function snd_info(string $file): SndfileInfo
+function sf_info(string $file): SfInfo
 ```
 
-**Returns:** `SndfileInfo` — all fields populated from the file header.
+**Returns:** `SfInfo` — all fields populated from the file header.
 
-**Throws:** `SndfileException` if the file cannot be opened.
+**Throws:** `SoundFileException` if the file cannot be opened.
 
 **Example:**
 
 ```php
-$info = snd_info('song.wav');
+$info = sf_info('song.wav');
 echo "{$info->frames} frames, {$info->channels} channels, {$info->duration()}s";
 ```
 
 ---
 
-## snd_check_format()
+## sf_check_format()
 
 Validate that an AudioFormat and SampleFormat combination is supported by libsndfile.
 
 ```php
-function snd_check_format(AudioFormat $format, SampleFormat $subtype): bool
+function sf_check_format(AudioFormat $format, SampleFormat $subtype): bool
 ```
 
 **Parameters:**
@@ -147,19 +147,19 @@ function snd_check_format(AudioFormat $format, SampleFormat $subtype): bool
 **Examples:**
 
 ```php
-snd_check_format(AudioFormat::Wav, SampleFormat::Pcm16);   // true
-snd_check_format(AudioFormat::Ogg, SampleFormat::Pcm16);   // false
-snd_check_format(AudioFormat::Flac, SampleFormat::Float);  // false
+sf_check_format(AudioFormat::Wav, SampleFormat::Pcm16);   // true
+sf_check_format(AudioFormat::Ogg, SampleFormat::Pcm16);   // false
+sf_check_format(AudioFormat::Flac, SampleFormat::Float);  // false
 ```
 
 ---
 
-## snd_resample()
+## sf_resample()
 
 Convert an NDArray from one sample rate to another using libsamplerate.
 
 ```php
-function snd_resample(
+function sf_resample(
     NDArray $input,
     int $inputRate,
     int $outputRate,
@@ -180,19 +180,19 @@ function snd_resample(
 
 **Returns:** `NDArray` of shape `[newFrames, channels]` with `DType::Float32`.
 
-**Throws:** `SndfileException` if the resampler fails or produces zero output.
+**Throws:** `SoundFileException` if the resampler fails or produces zero output.
 
 **Examples:**
 
 ```php
 // Chunked progressive (default) — safe for large files
-$r = snd_resample($audio, 44100, 22050);
+$r = sf_resample($audio, 44100, 22050);
 
 // One-shot simple — best for small signals
-$r = snd_resample($audio, 44100, 8000, chunkSize: null);
+$r = sf_resample($audio, 44100, 8000, chunkSize: null);
 
 // Explicit quality and chunk size
-$r = snd_resample($audio, 44100, 48000,
+$r = sf_resample($audio, 44100, 48000,
     quality: ResampleQuality::Fastest,
     chunkSize: 1024,
 );

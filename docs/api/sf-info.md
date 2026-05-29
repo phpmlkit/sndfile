@@ -1,18 +1,18 @@
-# SndfileInfo
+# SfInfo
 
 Immutable value object describing an audio file's metadata.
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|------------|
-| `frames` | `int` | Total frame count |
-| `channels` | `int` | Number of audio channels |
-| `sampleRate` | `int` | Sample rate in Hz |
-| `format` | `AudioFormat` | Container format |
-| `sampleFormat` | `SampleFormat` | Encoding subtype |
-| `sections` | `int` | Number of data sections |
-| `seekable` | `bool` | Whether the file supports seeking |
+| Property       | Type           | Description                       |
+|----------------|----------------|-----------------------------------|
+| `frames`       | `int`          | Total frame count                 |
+| `channels`     | `int`          | Number of audio channels          |
+| `sampleRate`   | `int`          | Sample rate in Hz                 |
+| `format`       | `AudioFormat`  | Container format                  |
+| `sampleFormat` | `SampleFormat` | Encoding subtype                  |
+| `sections`     | `int`          | Number of data sections           |
+| `seekable`     | `bool`         | Whether the file supports seeking |
 
 ## Factory Methods
 
@@ -26,37 +26,21 @@ public static function probe(string $path): self
 
 **Returns:** `self` with all fields populated from the file header.
 
-**Throws:** `SndfileException` if the file cannot be opened.
+**Throws:** `SoundFileException` if the file cannot be opened.
 
 **Example:**
 
 ```php
-$info = SndfileInfo::probe('song.wav');
+$info = SfInfo::probe('song.wav');
 echo "{$info->frames} frames × {$info->channels} channels";
 ```
 
-### forWrite()
-
-Create a write-ready info object.
-
-```php
-public static function forWrite(
-    int $frames,
-    int $channels,
-    int $sampleRate,
-    AudioFormat $format,
-    SampleFormat $sampleFormat,
-): self
-```
-
-`$seekable` is always `true` for write-mode info.
-
-### fromSfInfo()
+### fromCData()
 
 Create from an already-populated libsndfile `SF_INFO` struct. Internal use.
 
 ```php
-public static function fromSfInfo(FFI\CData $sfInfo): self
+public static function fromCData(FFI\CData $sfInfo): self
 ```
 
 ## Derived Values
@@ -83,7 +67,7 @@ Equivalent to `$frames * $channels`.
 
 ## Builders
 
-Each returns a new `SndfileInfo` with one field changed and all others preserved.
+Each returns a new `SfInfo` with one field changed and all others preserved.
 
 ### withFrames()
 
@@ -106,6 +90,6 @@ public function withSampleRate(int $sr): self
 **Example:**
 
 ```php
-$info = SndfileInfo::probe('song.wav');
+$info = SfInfo::probe('song.wav');
 $modified = $info->withSampleRate(48000)->withChannels(1);
 ```

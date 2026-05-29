@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\FFI;
+namespace PhpMlKit\SoundFile\FFI;
 
 use FFI;
 use FFI\CData;
-use PhpMlKit\Sndfile\Enums\ResampleQuality;
+use PhpMlKit\SoundFile\Enums\ResampleQuality;
 
 /**
  * Low-level libsamplerate FFI wrapper.

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\Tests;
+namespace PhpMlKit\SoundFile\Tests;
 
 use PhpMlKit\NDArray\DType;
 use PhpMlKit\NDArray\NDArray;
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\FileMode;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
-use PhpMlKit\Sndfile\Exceptions\SndfileException;
-use PhpMlKit\Sndfile\SndFile;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\FileMode;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
+use PhpMlKit\SoundFile\Exceptions\SoundFileException;
+use PhpMlKit\SoundFile\SoundFile;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversNothing]
-final class SndFileTest extends TestCase
+final class SoundFileTest extends TestCase
 {
     private string $monoWav;
     private string $stereoWav;
@@ -31,7 +31,7 @@ final class SndFileTest extends TestCase
 
     public function testOpenReadReturnsCorrectMetadata(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $this->assertSame(800, $sf->frames());
         $this->assertSame(1, $sf->channels());
@@ -45,14 +45,14 @@ final class SndFileTest extends TestCase
 
     public function testOpenMissingFileThrows(): void
     {
-        $this->expectException(SndfileException::class);
+        $this->expectException(SoundFileException::class);
 
-        new SndFile(sys_get_temp_dir().'/nonexistent_'.uniqid().'.wav', FileMode::Read);
+        new SoundFile(sys_get_temp_dir().'/nonexistent_'.uniqid().'.wav', FileMode::Read);
     }
 
     public function testReadReturnsCorrectShape(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
         $chunk = $sf->read(50);
 
         $this->assertSame([50, 1], $chunk->shape());
@@ -63,7 +63,7 @@ final class SndFileTest extends TestCase
 
     public function testReadAdvancesTell(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $this->assertSame(0, $sf->tell());
         $sf->read(50);
@@ -74,7 +74,7 @@ final class SndFileTest extends TestCase
 
     public function testReadAllRemaining(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $data = $sf->read(null);
         $this->assertSame([800, 1], $data->shape());
@@ -84,7 +84,7 @@ final class SndFileTest extends TestCase
 
     public function testReadPastEofReturnsRemaining(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $sf->seek(750);
         $data = $sf->read(100);
@@ -95,7 +95,7 @@ final class SndFileTest extends TestCase
 
     public function testSeekToAbsolutePosition(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $sf->seek(200);
         $this->assertSame(200, $sf->tell());
@@ -105,16 +105,16 @@ final class SndFileTest extends TestCase
 
     public function testSeekOnClosedFileThrows(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
         $sf->close();
 
-        $this->expectException(SndfileException::class);
+        $this->expectException(SoundFileException::class);
         $sf->seek(0);
     }
 
     public function testSeekFromCurrentPosition(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $sf->read(100);
         $sf->seek(50, \SEEK_CUR);
@@ -125,21 +125,21 @@ final class SndFileTest extends TestCase
 
     public function testTellStartsAtZero(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
         $this->assertSame(0, $sf->tell());
         $sf->close();
     }
 
     public function testEofReturnsFalseAtStart(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
         $this->assertFalse($sf->eof());
         $sf->close();
     }
 
     public function testEofReturnsTrueAfterReadingAll(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
         $sf->read(null);
         $this->assertTrue($sf->eof());
         $sf->close();
@@ -147,7 +147,7 @@ final class SndFileTest extends TestCase
 
     public function testBlocksYieldsCorrectTotalFrames(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $total = 0;
         foreach ($sf->blocks(100) as $block) {
@@ -160,7 +160,7 @@ final class SndFileTest extends TestCase
 
     public function testBlocksDoesNotExceedBlocksize(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $first = true;
         foreach ($sf->blocks(100) as $block) {
@@ -177,7 +177,7 @@ final class SndFileTest extends TestCase
 
     public function testBlocksFromSeekPosition(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
         $sf->seek(400);
 
         $total = 0;
@@ -193,7 +193,7 @@ final class SndFileTest extends TestCase
     {
         $tmp = sys_get_temp_dir().'/sndfile_write_test_'.uniqid().'.wav';
 
-        $sf = new SndFile(
+        $sf = new SoundFile(
             $tmp,
             FileMode::Write,
             sampleRate: 8000,
@@ -205,7 +205,7 @@ final class SndFileTest extends TestCase
         $sf->write($data);
         $sf->close();
 
-        $sf2 = new SndFile($tmp, FileMode::Read);
+        $sf2 = new SoundFile($tmp, FileMode::Read);
         $read = $sf2->read(null);
         $sf2->close();
 
@@ -219,7 +219,7 @@ final class SndFileTest extends TestCase
     {
         $tmp = sys_get_temp_dir().'/sndfile_ch_err_'.uniqid().'.wav';
 
-        $sf = new SndFile(
+        $sf = new SoundFile(
             $tmp,
             FileMode::Write,
             sampleRate: 8000,
@@ -228,7 +228,7 @@ final class SndFileTest extends TestCase
             subtype: SampleFormat::Float,
         );
 
-        $this->expectException(SndfileException::class);
+        $this->expectException(SoundFileException::class);
 
         $sf->write(NDArray::array([[0.1, 0.2], [0.3, 0.4]], DType::Float32));
         $sf->close();
@@ -240,7 +240,7 @@ final class SndFileTest extends TestCase
     {
         $tmp = sys_get_temp_dir().'/sndfile_cl_err_'.uniqid().'.wav';
 
-        $sf = new SndFile(
+        $sf = new SoundFile(
             $tmp,
             FileMode::Write,
             sampleRate: 8000,
@@ -250,7 +250,7 @@ final class SndFileTest extends TestCase
         );
         $sf->close();
 
-        $this->expectException(SndfileException::class);
+        $this->expectException(SoundFileException::class);
         $sf->write(NDArray::array([[0.1]], DType::Float32));
 
         unlink($tmp);
@@ -260,9 +260,9 @@ final class SndFileTest extends TestCase
     {
         $tmp = sys_get_temp_dir().'/sndfile_invalid_'.uniqid().'.ogg';
 
-        $this->expectException(SndfileException::class);
+        $this->expectException(SoundFileException::class);
 
-        new SndFile(
+        new SoundFile(
             $tmp,
             FileMode::Write,
             sampleRate: 8000,
@@ -274,10 +274,10 @@ final class SndFileTest extends TestCase
 
     public function testReadOnClosedFileThrows(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
         $sf->close();
 
-        $this->expectException(SndfileException::class);
+        $this->expectException(SoundFileException::class);
         $sf->read(10);
     }
 
@@ -285,7 +285,7 @@ final class SndFileTest extends TestCase
     {
         $tmp = sys_get_temp_dir().'/sndfile_tell_'.uniqid().'.wav';
 
-        $sf = new SndFile(
+        $sf = new SoundFile(
             $tmp,
             FileMode::Write,
             sampleRate: 8000,
@@ -304,8 +304,8 @@ final class SndFileTest extends TestCase
 
     public function testMultipleOpenHandlesWorkSimultaneously(): void
     {
-        $sf1 = new SndFile($this->monoWav, FileMode::Read);
-        $sf2 = new SndFile($this->stereoWav, FileMode::Read);
+        $sf1 = new SoundFile($this->monoWav, FileMode::Read);
+        $sf2 = new SoundFile($this->stereoWav, FileMode::Read);
 
         $c1 = $sf1->read(10);
         $c2 = $sf2->read(10);
@@ -319,7 +319,7 @@ final class SndFileTest extends TestCase
 
     public function testMetadataRoundTrip(): void
     {
-        $sf = new SndFile(Fixtures::metadataWav(), FileMode::Read);
+        $sf = new SoundFile(Fixtures::metadataWav(), FileMode::Read);
 
         $this->assertSame('Test Title', $sf->title());
         $this->assertSame('Test Artist', $sf->artist());
@@ -329,7 +329,7 @@ final class SndFileTest extends TestCase
 
     public function testMetadataNullWhenUnset(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
         $this->assertNull($sf->title());
         $this->assertNull($sf->artist());
@@ -341,7 +341,7 @@ final class SndFileTest extends TestCase
     {
         $tmp = sys_get_temp_dir().'/sndfile_meta_'.uniqid().'.wav';
 
-        $sf = new SndFile(
+        $sf = new SoundFile(
             $tmp,
             FileMode::Write,
             sampleRate: 8000,
@@ -354,7 +354,7 @@ final class SndFileTest extends TestCase
         $sf->write(NDArray::array([[0.5]], DType::Float32));
         $sf->close();
 
-        $sf2 = new SndFile($tmp, FileMode::Read);
+        $sf2 = new SoundFile($tmp, FileMode::Read);
         $this->assertSame('My Title', $sf2->title());
         $this->assertSame('My Artist', $sf2->artist());
         $sf2->close();
@@ -364,9 +364,9 @@ final class SndFileTest extends TestCase
 
     public function testWriteOnReadOnlyThrows(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
 
-        $this->expectException(SndfileException::class);
+        $this->expectException(SoundFileException::class);
         $this->expectExceptionMessage('Cannot write to a read-only file');
 
         $sf->write(NDArray::array([[0.1]], DType::Float32));
@@ -376,9 +376,9 @@ final class SndFileTest extends TestCase
     public function testReadOnWriteOnlyThrows(): void
     {
         $tmp = sys_get_temp_dir().'/sndfile_guard_'.uniqid().'.wav';
-        $sf = new SndFile($tmp, FileMode::Write, sampleRate: 8000);
+        $sf = new SoundFile($tmp, FileMode::Write, sampleRate: 8000);
 
-        $this->expectException(SndfileException::class);
+        $this->expectException(SoundFileException::class);
         $this->expectExceptionMessage('Cannot read from a write-only file');
 
         $sf->read(10);
@@ -389,7 +389,7 @@ final class SndFileTest extends TestCase
     public function testMultipleWritesAppendAndTrackPosition(): void
     {
         $tmp = sys_get_temp_dir().'/sndfile_multi_'.uniqid().'.wav';
-        $sf = new SndFile($tmp, FileMode::Write, sampleRate: 8000);
+        $sf = new SoundFile($tmp, FileMode::Write, sampleRate: 8000);
 
         $sf->write(NDArray::array([[0.1], [0.2]], DType::Float32));
         $this->assertSame(2, $sf->tell());
@@ -404,7 +404,7 @@ final class SndFileTest extends TestCase
         $sf->close();
 
         // Verify by reading back
-        $sf2 = new SndFile($tmp, FileMode::Read);
+        $sf2 = new SoundFile($tmp, FileMode::Read);
         $data = $sf2->read(null);
         $this->assertSame([6, 1], $data->shape());
         $sf2->close();
@@ -417,12 +417,12 @@ final class SndFileTest extends TestCase
         $tmp = sys_get_temp_dir().'/sndfile_rw_'.uniqid().'.wav';
 
         // Create file first
-        $w = new SndFile($tmp, FileMode::Write, sampleRate: 8000);
+        $w = new SoundFile($tmp, FileMode::Write, sampleRate: 8000);
         $w->write(NDArray::array([[0.1], [0.2], [0.3]], DType::Float32));
         $w->close();
 
         // Open in ReadWrite and write more
-        $rw = new SndFile($tmp, FileMode::ReadWrite, sampleRate: 8000);
+        $rw = new SoundFile($tmp, FileMode::ReadWrite, sampleRate: 8000);
         $this->assertSame(3, $rw->frames());
 
         $rw->seek(0, \SEEK_END);
@@ -440,12 +440,12 @@ final class SndFileTest extends TestCase
 
     public function testModeAccessor(): void
     {
-        $sf = new SndFile($this->monoWav, FileMode::Read);
+        $sf = new SoundFile($this->monoWav, FileMode::Read);
         $this->assertSame(FileMode::Read, $sf->mode());
         $sf->close();
 
         $tmp = sys_get_temp_dir().'/sndfile_md_'.uniqid().'.wav';
-        $w = new SndFile($tmp, FileMode::Write, sampleRate: 8000);
+        $w = new SoundFile($tmp, FileMode::Write, sampleRate: 8000);
         $this->assertSame(FileMode::Write, $w->mode());
         $w->close();
         unlink($tmp);
@@ -454,7 +454,7 @@ final class SndFileTest extends TestCase
     public function testEofFalseForWriteMode(): void
     {
         $tmp = sys_get_temp_dir().'/sndfile_eof_'.uniqid().'.wav';
-        $sf = new SndFile($tmp, FileMode::Write, sampleRate: 8000);
+        $sf = new SoundFile($tmp, FileMode::Write, sampleRate: 8000);
 
         $this->assertFalse($sf->eof());
         $sf->write(NDArray::array([[0.1]], DType::Float32));

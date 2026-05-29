@@ -1,6 +1,6 @@
 # Using FFI Handles Directly
 
-For advanced use cases, SndFile exposes the underlying libsndfile and libsamplerate FFI instances as singletons. This
+For advanced use cases, SoundFile exposes the underlying libsndfile and libsamplerate FFI instances as singletons. This
 lets you call the C functions directly when the high-level API doesn't fit your needs.
 
 ::: warning
@@ -11,8 +11,8 @@ The high-level API handles all of this automatically.
 ## Obtaining the Singletons
 
 ```php
-use PhpMlKit\Sndfile\FFI\Libsndfile;
-use PhpMlKit\Sndfile\FFI\Libsamplerate;
+use PhpMlKit\SoundFile\FFI\Libsndfile;
+use PhpMlKit\SoundFile\FFI\Libsamplerate;
 
 $snd = Libsndfile::get();    // Singleton — FFI::cdef() runs once
 $src = Libsamplerate::get(); // Singleton — FFI::cdef() runs once
@@ -26,8 +26,8 @@ instance.
 The `Libsndfile` class wraps the full libsndfile C API:
 
 ```php
-use PhpMlKit\Sndfile\FFI\Libsndfile;
-use PhpMlKit\Sndfile\Enums\FileMode;
+use PhpMlKit\SoundFile\FFI\Libsndfile;
+use PhpMlKit\SoundFile\Enums\FileMode;
 use FFI;
 
 $snd = Libsndfile::get();
@@ -80,8 +80,8 @@ $snd->close($handle);
 ## Low-Level Samplerate
 
 ```php
-use PhpMlKit\Sndfile\FFI\Libsamplerate;
-use PhpMlKit\Sndfile\Enums\ResampleQuality;
+use PhpMlKit\SoundFile\FFI\Libsamplerate;
+use PhpMlKit\SoundFile\Enums\ResampleQuality;
 use FFI;
 
 $src = Libsamplerate::get();
@@ -112,9 +112,9 @@ $src->deleteState($state);
 ## When to Use This
 
 - **Custom chunking strategies** — process audio in sizes the high-level API doesn't support
-- **Non-standard formats** — access libsndfile features not exposed by SndFile
+- **Non-standard formats** — access libsndfile features not exposed by SoundFile
 - **Zero-copy pipelines** — pass buffer pointers between FFI layers without round-tripping through NDArray
 - **Learning** — understand how the high-level API works internally
 
-For most use cases, the global functions and `SndFile` class are the right choice. They handle buffer allocation, scope
+For most use cases, the global functions and `SoundFile` class are the right choice. They handle buffer allocation, scope
 management, dtype dispatch, and error cleanup automatically.

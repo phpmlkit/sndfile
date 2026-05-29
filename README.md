@@ -1,13 +1,13 @@
 <p align="center">
-  <h1 align="center">PHP SndFile</h1>
+  <h1 align="center">PHP SoundFile</h1>
 </p>
 
 <p align="center">Low-level audio I/O and resampling for PHP — backed by libsndfile and libsamplerate</p>
 
 <p align="center">
-  <a href="https://packagist.org/packages/phpmlkit/sndfile"><img src="https://img.shields.io/packagist/v/phpmlkit/sndfile?style=flat-square" alt="Latest Version"></a>
-  <a href="https://github.com/phpmlkit/sndfile/actions"><img src="https://img.shields.io/github/actions/workflow/status/phpmlkit/sndfile/tests.yml?branch=main&label=tests&style=flat-square" alt="GitHub Workflow Status"></a>
-  <a href="https://packagist.org/packages/phpmlkit/sndfile"><img src="https://img.shields.io/packagist/dt/phpmlkit/sndfile?style=flat-square" alt="Total Downloads"></a>
+  <a href="https://packagist.org/packages/phpmlkit/soundfile"><img src="https://img.shields.io/packagist/v/phpmlkit/soundfile?style=flat-square" alt="Latest Version"></a>
+  <a href="https://github.com/phpmlkit/soundfile/actions"><img src="https://img.shields.io/github/actions/workflow/status/phpmlkit/soundfile/tests.yml?branch=main&label=tests&style=flat-square" alt="GitHub Workflow Status"></a>
+  <a href="https://packagist.org/packages/phpmlkit/soundfile"><img src="https://img.shields.io/packagist/dt/phpmlkit/soundfile?style=flat-square" alt="Total Downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
 </p>
 
@@ -15,17 +15,17 @@
 
 - **Read & write audio files** — WAV, FLAC, Ogg Vorbis, MP3, AIFF, and 20+ other formats
 - **NDArray-native** — data flows in and out as `[frames × channels]` NDArrays, no intermediate buffers
-- **Streaming I/O** — instance-based `SndFile` class with read, write, seek, tell, and block iteration
-- **One-shot convenience** — `snd_read()` and `snd_write()` for simple load/save without managing a handle
-- **Sample rate conversion** — `snd_resample()` with chunked progressive mode for large files, one-shot simple mode for
+- **Streaming I/O** — instance-based `SoundFile` class with read, write, seek, tell, and block iteration
+- **One-shot convenience** — `sf_read()` and `sf_write()` for simple load/save without managing a handle
+- **Sample rate conversion** — `sf_resample()` with chunked progressive mode for large files, one-shot simple mode for
   small signals, and four quality levels
-- **Metadata** — read and write title, artist, album, track number, and arbitrary SF_STR tags
+- **Metadata** — read and write title, artist, album, track number, and arbitrary tags
 - **Type-safe** — PHP 8.2+ with backed enums, readonly value objects, and strict types throughout
 
 ## Installation
 
 ```bash
-composer require phpmlkit/sndfile
+composer require phpmlkit/soundfile
 ```
 
 **Requirements:** PHP 8.2 or higher with the FFI extension enabled.
@@ -37,48 +37,48 @@ The package ships pre-compiled shared libraries for macOS (arm64, x86_64), Linux
 ### Read and write
 
 ```php
-use function PhpMlKit\Sndfile\{snd_read, snd_write, snd_info};
+use function PhpMlKit\SoundFile\{sf_read, sf_write, sf_info};
 
 // Read a file — returns [NDArray, sampleRate]
-[$audio, $sr] = snd_read('input.wav');
+[$audio, $sr] = sf_read('input.wav');
 // $audio shape: [441000] (mono, Float32), $sr: 44100
 
 // Write it back (format and subtype auto-detected from extension)
-snd_write('output.wav', $audio, $sr);
+sf_write('output.wav', $audio, $sr);
 
 // Probe metadata without loading data
-$info = snd_info('input.wav');
+$info = sf_info('input.wav');
 echo "{$info->frames} frames, {$info->channels} channels, {$info->duration()}s";
 ```
 
 ### Resample
 
 ```php
-use function PhpMlKit\Sndfile\snd_resample;
-use PhpMlKit\Sndfile\Enums\ResampleQuality;
+use function PhpMlKit\SoundFile\sf_resample;
+use PhpMlKit\SoundFile\Enums\ResampleQuality;
 
 // Chunked progressive — safe for large files (default)
-$resampled = snd_resample($audio, inputRate: 44100, outputRate: 22050);
+$resampled = sf_resample($audio, inputRate: 44100, outputRate: 22050);
 
 // One-shot simple — best for small signals
-$resampled = snd_resample($audio, 44100, 16000, chunkSize: null);
+$resampled = sf_resample($audio, 44100, 16000, chunkSize: null);
 
 // Best quality, explicit chunk size
-$resampled = snd_resample(
+$resampled = sf_resample(
     $audio, 44100, 8000,
     quality: ResampleQuality::Best,
     chunkSize: 4096,
 );
 ```
 
-### Streaming with SndFile
+### Streaming with SoundFile
 
 ```php
-use PhpMlKit\Sndfile\SndFile;
-use PhpMlKit\Sndfile\Enums\FileMode;
+use PhpMlKit\SoundFile\SoundFile;
+use PhpMlKit\SoundFile\Enums\FileMode;
 
 // Open for reading
-$sf = new SndFile('input.wav', FileMode::Read);
+$sf = new SoundFile('input.wav', FileMode::Read);
 
 // Seek and read
 $sf->seek(44100);
@@ -92,7 +92,7 @@ foreach ($sf->blocks(1024) as $block) {
 $sf->close();
 
 // Open for writing
-$out = new SndFile('output.wav', FileMode::Write,
+$out = new SoundFile('output.wav', FileMode::Write,
     sampleRate: 44100, channels: 2,
 );
 $out->setTitle('My Track');
@@ -101,7 +101,7 @@ $out->write($stereoData);
 $out->close();
 ```
 
-> See the [full documentation](https://phpmlkit.github.io/sndfile/) for detailed guides, tutorials, and a complete API reference.
+> See the [full documentation](https://phpmlkit.github.io/soundfile/) for detailed guides, tutorials, and a complete API reference.
 
 ## Core Concepts
 
@@ -120,23 +120,23 @@ Three independent choices interact when writing a file:
 | **SampleFormat**  | The file's encoding subtype      | `Pcm16`, `Float`, `Vorbis`    |
 | **AudioFormat**   | The container                    | `Wav`, `Flac`, `Ogg`          |
 
-When you call `snd_write()`, the NDArray's dtype is **automatically converted** to match the target `SampleFormat`. You
+When you call `sf_write()`, the NDArray's dtype is **automatically converted** to match the target `SampleFormat`. You
 never need to call `astype()` yourself. The combination of `AudioFormat` and `SampleFormat` is validated against
-libsndfile's compatibility table — an incompatible pair (like `Ogg + Pcm16`) throws a `SndfileException` before any data
+libsndfile's compatibility table — an incompatible pair (like `Ogg + Pcm16`) throws a `SoundFileException` before any data
 is written.
 
 ## API Reference
 
 ### Global Functions
 
-These are importable with `use function PhpMlKit\Sndfile\{...}` and provide the simplest path for common operations.
+These are importable with `use function PhpMlKit\SoundFile\{...}` and provide the simplest path for common operations.
 
-#### `snd_read()`
+#### `sf_read()`
 
 Read an audio file into a single NDArray.
 
 ```php
-function snd_read(
+function sf_read(
     string $file,
     ?int $start = null,     // First frame (0-based; null = beginning)
     ?int $stop = null,      // One past last frame (null = EOF)
@@ -149,17 +149,17 @@ The dtype matches the file's native format. For partial reads, use `start` and `
 `$always2d = false` (default), mono files return a 1D array for convenience.
 
 ```php
-[$data, $sr] = snd_read('song.wav');
-[$part, $sr] = snd_read('song.wav', start: 44100, stop: 88200);
-[$data, $sr] = snd_read('song.wav', always2d: true);
+[$data, $sr] = sf_read('song.wav');
+[$part, $sr] = sf_read('song.wav', start: 44100, stop: 88200);
+[$data, $sr] = sf_read('song.wav', always2d: true);
 ```
 
-#### `snd_write()`
+#### `sf_write()`
 
 Write an NDArray to an audio file.
 
 ```php
-function snd_write(
+function sf_write(
     string $file,
     NDArray $data,               // [frames] or [frames, channels]
     int $sampleRate,             // Sample rate in Hz
@@ -172,37 +172,37 @@ function snd_write(
 subtype.
 
 ```php
-snd_write('out.wav', $data, sampleRate: 44100);
-snd_write('out.flac', $data, 44100, subtype: SampleFormat::Pcm24);
+sf_write('out.wav', $data, sampleRate: 44100);
+sf_write('out.flac', $data, 44100, subtype: SampleFormat::Pcm24);
 ```
 
-#### `snd_info()`
+#### `sf_info()`
 
 Read metadata without loading audio data. Opens the file, reads the header, and closes immediately.
 
 ```php
-function snd_info(string $file): SndfileInfo
+function sf_info(string $file): SfInfo
 ```
 
-#### `snd_check_format()`
+#### `sf_check_format()`
 
 Validate that a container format and encoding subtype are compatible.
 
 ```php
-function snd_check_format(AudioFormat $format, SampleFormat $subtype): bool
+function sf_check_format(AudioFormat $format, SampleFormat $subtype): bool
 ```
 
 ```php
-snd_check_format(AudioFormat::Wav, SampleFormat::Pcm16);  // true
-snd_check_format(AudioFormat::Ogg, SampleFormat::Pcm16);  // false
+sf_check_format(AudioFormat::Wav, SampleFormat::Pcm16);  // true
+sf_check_format(AudioFormat::Ogg, SampleFormat::Pcm16);  // false
 ```
 
-#### `snd_resample()`
+#### `sf_resample()`
 
 Convert an NDArray from one sample rate to another.
 
 ```php
-function snd_resample(
+function sf_resample(
     NDArray $input,                     // [frames, channels]
     int $inputRate,                     // Source sample rate in Hz
     int $outputRate,                    // Target sample rate in Hz
@@ -217,20 +217,20 @@ buffer — safe for large signals. When null, it uses `src_simple` for a single-
 The output is always `Float32` regardless of input dtype. Inputs of other dtypes are automatically converted.
 
 ```php
-$resampled = snd_resample($data, 44100, 22050);           // chunked progressive
-$resampled = snd_resample($data, 44100, 8000, chunkSize: null); // one-shot simple
+$resampled = sf_resample($data, 44100, 22050);           // chunked progressive
+$resampled = sf_resample($data, 44100, 8000, chunkSize: null); // one-shot simple
 ```
 
 ### Classes
 
-#### `SndFile`
+#### `SoundFile`
 
 An opened audio file handle for streaming read/write.
 
 **Constructor:**
 
 ```php
-new SndFile(
+new SoundFile(
     string $path,
     FileMode $mode = FileMode::Read,
     // Write-mode parameters:
@@ -256,7 +256,7 @@ defaults to the format's preferred).
 | `eof(): bool`                                     | Whether the position has reached the end.                        |
 | `blocks(int $size = 4096): Generator`             | Yield NDArrays of up to `$size` frames.                          |
 | `close(): void`                                   | Close the handle (called automatically by destructor).           |
-| `info(): SndfileInfo`                             | Full file metadata.                                              |
+| `info(): SfInfo`                             | Full file metadata.                                              |
 | `frames(): int`                                   | Total frames.                                                    |
 | `channels(): int`                                 | Channel count.                                                   |
 | `sampleRate(): int`                               | Sample rate in Hz.                                               |
@@ -278,7 +278,7 @@ defaults to the format's preferred).
 
 Plus `getString(int $strType)` and `setString(int $strType, string $value)` for arbitrary SF_STR constants.
 
-#### `SndfileInfo`
+#### `SfInfo`
 
 Immutable value object describing an audio file's metadata.
 
@@ -286,9 +286,9 @@ Immutable value object describing an audio file's metadata.
 
 | Method                                                                                                                 | Description                                        |
 |------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| `SndfileInfo::probe(string $path): self`                                                                               | Open file, read header, close.                     |
-| `SndfileInfo::fromSfInfo(FFI\CData $sfInfo): self`                                                                     | Create from a populated libsndfile SF_INFO struct. |
-| `SndfileInfo::forWrite(int $frames, int $channels, int $sampleRate, AudioFormat $format, SampleFormat $subtype): self` | Create write-ready info.                           |
+| `SfInfo::probe(string $path): self`                                                                               | Open file, read header, close.                     |
+| `SfInfo::fromSfInfo(FFI\CData $sfInfo): self`                                                                     | Create from a populated libsndfile SF_INFO struct. |
+| `SfInfo::forWrite(int $frames, int $channels, int $sampleRate, AudioFormat $format, SampleFormat $subtype): self` | Create write-ready info.                           |
 
 **Properties:**
 
@@ -366,15 +366,15 @@ libsamplerate converter quality levels.
 
 ### Exceptions
 
-`SndfileException` — thrown for I/O errors, invalid format combinations, closed-file operations, and resampling
+`SoundFileException` — thrown for I/O errors, invalid format combinations, closed-file operations, and resampling
 failures. Extends `\RuntimeException`.
 
 ## Documentation
 
-- [Full Documentation](https://phpmlkit.github.io/sndfile/)
-- [What is SndFile?](https://phpmlkit.github.io/sndfile/guide/getting-started/what-is-sndfile)
-- [Quick Start](https://phpmlkit.github.io/sndfile/guide/getting-started/quick-start)
-- [API Reference](https://phpmlkit.github.io/sndfile/api/)
+- [Full Documentation](https://phpmlkit.github.io/soundfile/)
+- [What is SoundFile?](https://phpmlkit.github.io/soundfile/guide/getting-started/what-is-sndfile)
+- [Quick Start](https://phpmlkit.github.io/soundfile/guide/getting-started/quick-start)
+- [API Reference](https://phpmlkit.github.io/soundfile/api/)
 
 ## Development
 

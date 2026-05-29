@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: "PHP SndFile"
+  name: "PHP SoundFile"
   tagline: Low-level audio I/O and resampling for PHP
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/getting-started/what-is-sndfile
+      link: /guide/getting-started/what-is-soundfile
     - theme: alt
       text: View on GitHub
       link: https://github.com/phpmlkit/sndfile
@@ -21,7 +21,7 @@ features:
     details: Four quality levels, chunked progressive mode for large files, one-shot simple mode for small signals.
   - icon: 🧵
     title: Streaming I/O
-    details: Instance-based SndFile class with read, write, seek, tell, block iteration, and metadata tags.
+    details: Instance-based SoundFile class with read, write, seek, tell, block iteration, and metadata tags.
   - icon: 🏷️
     title: Full Metadata Support
     details: Read and write title, artist, album, track number, genre, and arbitrary tags on open handles.
@@ -36,27 +36,27 @@ features:
 ## Quick Example
 
 ```php
-use function PhpMlKit\Sndfile\{snd_read, snd_write, snd_resample};
+use function PhpMlKit\SoundFile\{sf_read, sf_write, sf_resample};
 
 // Read an audio file — returns [NDArray, sampleRate]
-[$audio, $sr] = snd_read('input.wav');
+[$audio, $sr] = sf_read('input.wav');
 // $audio shape: [441000] (mono, Float32), $sr: 44100
 
 // Resample from 44.1kHz to 16kHz
-$audio16k = snd_resample($audio, $sr, 16000);
+$audio16k = sf_resample($audio, $sr, 16000);
 
 // Write it back
-snd_write('output.wav', $audio16k, 22050);
+sf_write('output.wav', $audio16k, 22050);
 ```
 
-## Streaming with SndFile
+## Streaming with SoundFile
 
 ```php
-use PhpMlKit\Sndfile\SndFile;
-use PhpMlKit\Sndfile\Enums\FileMode;
+use PhpMlKit\SoundFile\SoundFile;
+use PhpMlKit\SoundFile\Enums\FileMode;
 
 // Open for reading
-$sf = new SndFile('input.wav', FileMode::Read);
+$sf = new SoundFile('input.wav', FileMode::Read);
 
 // Seek and read
 $sf->seek(44100);
@@ -69,7 +69,7 @@ foreach ($sf->blocks(1024) as $block) {
 $sf->close();
 
 // Open for writing
-$out = new SndFile('output.wav', FileMode::Write,
+$out = new SoundFile('output.wav', FileMode::Write,
     sampleRate: 44100, channels: 2,
 );
 $out->setTitle('My Track');
@@ -79,6 +79,6 @@ $out->close();
 
 ## Next steps
 
-- [What is SndFile?](/guide/getting-started/what-is-sndfile)
+- [What is SoundFile?](/guide/getting-started/what-is-soundfile)
 - [Installation](/guide/getting-started/installation)
 - [API Reference](/api/)

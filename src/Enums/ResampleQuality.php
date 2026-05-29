@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\Enums;
+namespace PhpMlKit\SoundFile\Enums;
 
 /**
  * libsamplerate converter quality levels.

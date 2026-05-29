@@ -8,7 +8,7 @@
 ## Install via Composer
 
 ```bash
-composer require phpmlkit/sndfile
+composer require phpmlkit/soundfile
 ```
 
 The package ships pre-compiled shared libraries for all major platforms.
@@ -27,9 +27,9 @@ Pre-compiled libraries are provided for:
 
 require_once 'vendor/autoload.php';
 
-use function PhpMlKit\Sndfile\snd_info;
+use function PhpMlKit\SoundFile\sf_info;
 
-$info = snd_info(__DIR__.'/test.wav');
+$info = sf_info(__DIR__.'/test.wav');
 echo "Frames: {$info->frames}, Channels: {$info->channels}, Sample rate: {$info->sampleRate}";
 ```
 

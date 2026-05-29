@@ -1,6 +1,6 @@
-# What is SndFile?
+# What is SoundFile?
 
-SndFile is a low-level PHP library for reading, writing, and resampling audio files. It provides direct FFI bindings to [libsndfile](https://github.com/libsndfile/libsndfile) and [libsamplerate](https://github.com/libsndfile/libsamplerate), two battle-tested C libraries that handle over 25 audio formats.
+SoundFile is a low-level PHP library for reading, writing, and resampling audio files. It provides direct FFI bindings to [libsndfile](https://github.com/libsndfile/libsndfile) and [libsamplerate](https://github.com/libsndfile/libsamplerate), two battle-tested C libraries that handle over 25 audio formats.
 
 ## What it does
 
@@ -12,19 +12,19 @@ SndFile is a low-level PHP library for reading, writing, and resampling audio fi
 
 ## What it is NOT
 
-SndFile is not a full-featured audio processing library. It does not try to be a DSP library (filters, spectrograms, effects, etc.). For those capabilities, you want a higher-level library built on top of SndFile or you could pair this with `phpmlkit/ndarray` operations (FFT, windows, etc.).
+SoundFile is not a full-featured audio processing library. It does not try to be a DSP library (filters, spectrograms, effects, etc.). For those capabilities, you want a higher-level library built on top of SoundFile or you could pair this with `phpmlkit/ndarray` operations (FFT, windows, etc.).
 
 It is also not a CLI tool or a standalone application. It is a PHP library meant to be used within your PHP projects.
 
 ## Architecture
 
-SndFile sits at the boundary between PHP and C:
+SoundFile sits at the boundary between PHP and C:
 
 ```
 ┌──────────────────────────┐
 │ Your PHP application     │
 ├──────────────────────────┤
-│ SndFile (this package)   │  ← FFI bindings, singleton backends
+│ SoundFile (this package)   │  ← FFI bindings, singleton backends
 ├──────────────────────────┤
 │ libsndfile + libsamplerate│  ← C shared libraries
 └──────────────────────────┘
@@ -34,34 +34,34 @@ The package ships pre-compiled shared libraries for macOS (arm64, x86_64), Linux
 
 ## Two usage styles
 
-SndFile provides two ways to work with audio:
+SoundFile provides two ways to work with audio:
 
 ### Namespaced functions — simple, one-shot
 
 Use these when you want to load a whole file, save a whole file, or probe metadata in one call.
 
-- `snd_read()` — load an entire file (or a slice) into one NDArray
-- `snd_write()` — write an NDArray to disk
-- `snd_info()` — probe metadata without loading the audio
-- `snd_resample()` — resample an NDArray
+- `sf_read()` — load an entire file (or a slice) into one NDArray
+- `sf_write()` — write an NDArray to disk
+- `sf_info()` — probe metadata without loading the audio
+- `sf_resample()` — resample an NDArray
 
 ```php
-use function PhpMlKit\Sndfile\snd_read;
+use function PhpMlKit\SoundFile\sf_read;
 
-[$audio, $sr] = snd_read('song.wav');
+[$audio, $sr] = sf_read('song.wav');
 ```
 
 The file is opened, the operation is performed, and the handle is closed — all internally.
 
-### SndFile class — streaming, full control
+### SoundFile class — streaming, full control
 
 Use this when you need to stream large files, seek to arbitrary positions, append data with multiple writes, set/read string metadata tags, or iterate in blocks.
 
 ```php
-use PhpMlKit\Sndfile\SndFile;
-use PhpMlKit\Sndfile\Enums\FileMode;
+use PhpMlKit\SoundFile\SoundFile;
+use PhpMlKit\SoundFile\Enums\FileMode;
 
-$sf = new SndFile('large-file.wav', FileMode::Read);
+$sf = new SoundFile('large-file.wav', FileMode::Read);
 foreach ($sf->blocks(4096) as $block) {
     // Process each block without loading the entire file
 }

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\FFI;
+namespace PhpMlKit\SoundFile\FFI;
 
 use FFI;
 use FFI\CData;
 use PhpMlKit\NDArray\DType;
-use PhpMlKit\Sndfile\Enums\FileMode;
+use PhpMlKit\SoundFile\Enums\FileMode;
 
 /**
  * Low-level libsndfile FFI wrapper.

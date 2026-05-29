@@ -2,34 +2,33 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile;
+namespace PhpMlKit\SoundFile;
 
 use FFI\CData;
-use PhpMlKit\NDArray\DType;
 use PhpMlKit\NDArray\NDArray;
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\FileMode;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
-use PhpMlKit\Sndfile\Exceptions\SndfileException;
-use PhpMlKit\Sndfile\FFI\Libsndfile;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\FileMode;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
+use PhpMlKit\SoundFile\Exceptions\SoundFileException;
+use PhpMlKit\SoundFile\FFI\Libsndfile;
 
 /**
  * An opened audio file — streaming read/write with seeking and block iteration.
  *
  * Read mode:
- *   $sf = new SndFile('audio.wav', FileMode::Read);
+ *   $sf = new SoundFile('audio.wav', FileMode::Read);
  *   $chunk = $sf->read(512);
  *   foreach ($sf->blocks(1024) as $block) { ... }
  *
  * Write mode:
- *   $sf = new SndFile('out.wav', FileMode::Write,
+ *   $sf = new SoundFile('out.wav', FileMode::Write,
  *       sampleRate: 44100, channels: 2,
  *       format: AudioFormat::Wav, subtype: SampleFormat::Float);
  *   $sf->write($data);
  *   $sf->close();
  *
  * ReadWrite mode:
- *   $sf = new SndFile('file.wav', FileMode::ReadWrite,
+ *   $sf = new SoundFile('file.wav', FileMode::ReadWrite,
  *       sampleRate: 44100, channels: 2,
  *       format: AudioFormat::Wav, subtype: SampleFormat::Float);
  *   $sf->write($data);
@@ -37,15 +36,15 @@ use PhpMlKit\Sndfile\FFI\Libsndfile;
  *   $sf->read(100);
  *
  * For one-shot read/write without managing the handle, use the convenience
- * functions snd_read() and snd_write() instead.
+ * functions sf_read() and sf_write() instead.
  *
- * @see snd_read()
- * @see snd_write()
+ * @see sf_read()
+ * @see sf_write()
  */
-final class SndFile
+final class SoundFile
 {
     private ?CData $handle = null;
-    private SndfileInfo $info;
+    private SfInfo $info;
     private int $position = 0;
     private readonly Libsndfile $lib;
     private readonly FileMode $mode;
@@ -64,7 +63,7 @@ final class SndFile
      * @param null|AudioFormat  $format     Container format (write / read-write mode; default: inferred from extension)
      * @param null|SampleFormat $subtype    Encoding subtype (write / read-write mode; default: format's preferred)
      *
-     * @throws SndfileException If the file cannot be opened or the format is invalid
+     * @throws SoundFileException If the file cannot be opened or the format is invalid
      */
     public function __construct(
         string $path,
@@ -76,42 +75,41 @@ final class SndFile
     ) {
         $this->mode = $mode;
         $this->lib = Libsndfile::get();
-        $sfInfo = $this->lib->newInfo();
 
         if (FileMode::Read === $mode || FileMode::ReadWrite === $mode) {
+            $sfInfo = $this->lib->newInfo();
             $handle = $this->lib->open($path, $mode, $sfInfo);
 
             if (null === $handle) {
-                throw new SndfileException(
+                throw new SoundFileException(
                     "Failed to open '{$path}': ".$this->lib->strError(null)
                 );
             }
 
             $this->handle = $handle;
-            $this->info = SndfileInfo::fromSfInfo($sfInfo);
+            $this->info = SfInfo::fromCData($sfInfo);
 
             return;
         }
 
         // Write mode
         $format ??= AudioFormat::fromPath($path)
-            ?? throw new SndfileException("Cannot determine format for '{$path}'");
+            ?? throw new SoundFileException("Cannot determine format for '{$path}'");
 
         $subtype ??= $format->defaultSampleFormat();
 
-        if (!snd_check_format($format, $subtype)) {
-            throw new SndfileException(
+        if (!sf_check_format($format, $subtype)) {
+            throw new SoundFileException(
                 "Incompatible format/subtype: {$format->name} + {$subtype->name}"
             );
         }
 
-        $writeInfo = SndfileInfo::forWrite(0, $channels ?? 1, $sampleRate ?? 44100, $format, $subtype);
-        $writeInfo->populateSfInfo($sfInfo);
+        $writeInfo = new SfInfo(0, $channels ?? 1, $sampleRate ?? 44100, $format, $subtype);
 
-        $handle = $this->lib->open($path, $mode, $sfInfo);
+        $handle = $this->lib->open($path, $mode, $writeInfo->toCData($this->lib));
 
         if (null === $handle) {
-            throw new SndfileException(
+            throw new SoundFileException(
                 "Failed to open '{$path}' for writing: ".$this->lib->strError(null)
             );
         }
@@ -140,17 +138,17 @@ final class SndFile
      *
      * @param null|int $numFrames Maximum frames to read (null = remaining)
      *
-     * @throws SndfileException If the file is closed, opened in write-only
-     *                          mode, or a read error occurs
+     * @throws SoundFileException If the file is closed, opened in write-only
+     *                            mode, or a read error occurs
      */
     public function read(?int $numFrames = null): NDArray
     {
         if (null === $this->handle) {
-            throw new SndfileException('Cannot read from a closed file');
+            throw new SoundFileException('Cannot read from a closed file');
         }
 
         if (FileMode::Write === $this->mode) {
-            throw new SndfileException('Cannot read from a write-only file');
+            throw new SoundFileException('Cannot read from a write-only file');
         }
 
         $numFrames ??= $this->remaining();
@@ -163,7 +161,7 @@ final class SndFile
         $read = $readFn($this->lib, $this->handle, $buffer, $numFrames);
 
         if ($read < 0) {
-            throw new SndfileException('Read error: '.$this->lib->strError($this->handle));
+            throw new SoundFileException('Read error: '.$this->lib->strError($this->handle));
         }
 
         $this->position += $read;
@@ -184,17 +182,17 @@ final class SndFile
      * @param NDArray $data Data of shape [N, channels] where channels matches
      *                      the file's channel count
      *
-     * @throws SndfileException If the handle is closed, opened in read-only
-     *                          mode, channels mismatch, or a write error occurs
+     * @throws SoundFileException If the handle is closed, opened in read-only
+     *                            mode, channels mismatch, or a write error occurs
      */
     public function write(NDArray $data): void
     {
         if (null === $this->handle) {
-            throw new SndfileException('Cannot write to a closed file');
+            throw new SoundFileException('Cannot write to a closed file');
         }
 
         if (FileMode::Read === $this->mode) {
-            throw new SndfileException('Cannot write to a read-only file');
+            throw new SoundFileException('Cannot write to a read-only file');
         }
 
         $shape = $data->shape();
@@ -202,7 +200,7 @@ final class SndFile
         $channels = $shape[1] ?? 1;
 
         if ($channels !== $this->info->channels) {
-            throw new SndfileException(
+            throw new SoundFileException(
                 "Channel mismatch: expected {$this->info->channels}, got {$channels}"
             );
         }
@@ -217,7 +215,7 @@ final class SndFile
         $written = $writeFn($this->lib, $this->handle, $buffer, $frames);
 
         if ($written !== $frames) {
-            throw new SndfileException(
+            throw new SoundFileException(
                 "Write error: wrote {$written}/{$frames} frames: ".$this->lib->strError($this->handle)
             );
         }
@@ -266,22 +264,22 @@ final class SndFile
      * @param int $frameOffset Target frame position
      * @param int $whence      SEEK_SET (0), SEEK_CUR (1), or SEEK_END (2)
      *
-     * @throws SndfileException If the file is closed, not seekable, or the seek fails
+     * @throws SoundFileException If the file is closed, not seekable, or the seek fails
      */
     public function seek(int $frameOffset, int $whence = \SEEK_SET): void
     {
         if (!$this->info->seekable) {
-            throw new SndfileException('This file does not support seeking');
+            throw new SoundFileException('This file does not support seeking');
         }
 
         if (null === $this->handle) {
-            throw new SndfileException('Cannot seek a closed file');
+            throw new SoundFileException('Cannot seek a closed file');
         }
 
         $result = $this->lib->seek($this->handle, $frameOffset, $whence);
 
         if ($result < 0) {
-            throw new SndfileException('Seek error: '.$this->lib->strError($this->handle));
+            throw new SoundFileException('Seek error: '.$this->lib->strError($this->handle));
         }
 
         $this->position = $result;
@@ -344,7 +342,7 @@ final class SndFile
      * In read mode, the frame count is the file's total frames. In write
      * or read-write mode, it reflects the total frames written so far.
      */
-    public function info(): SndfileInfo
+    public function info(): SfInfo
     {
         return $this->info;
     }
@@ -452,12 +450,12 @@ final class SndFile
      *
      * @param int $strType SF_STR_* constant
      *
-     * @throws SndfileException If the file is closed
+     * @throws SoundFileException If the file is closed
      */
     public function setString(int $strType, string $value): void
     {
         if (null === $this->handle) {
-            throw new SndfileException('Cannot set metadata on a closed file');
+            throw new SoundFileException('Cannot set metadata on a closed file');
         }
 
         $this->lib->setString($this->handle, $strType, $value);

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\Tests;
+namespace PhpMlKit\SoundFile\Tests;
 
 use PhpMlKit\NDArray\DType;
 use PhpMlKit\NDArray\NDArray;
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\FileMode;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
-use PhpMlKit\Sndfile\SndFile;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\FileMode;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
+use PhpMlKit\SoundFile\SoundFile;
 
 /**
  * Generates and caches small test audio files, cleaning up on shutdown.
@@ -121,7 +121,7 @@ final class Fixtures
         self::writeWav(self::$shortWav, $short, $sr, SampleFormat::Float);
 
         self::$metadataWav = "{$dir}/metadata.wav";
-        $sf = new SndFile(
+        $sf = new SoundFile(
             self::$metadataWav,
             FileMode::Write,
             sampleRate: $sr,
@@ -152,7 +152,7 @@ final class Fixtures
 
     private static function writeWav(string $path, NDArray $data, int $sr, SampleFormat $subtype): void
     {
-        $sf = new SndFile(
+        $sf = new SoundFile(
             $path,
             FileMode::Write,
             sampleRate: $sr,

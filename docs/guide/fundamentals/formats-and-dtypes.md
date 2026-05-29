@@ -6,7 +6,7 @@ When writing an audio file, three independent “type” concepts interact:
 - **SampleFormat**: how samples are encoded in the file (e.g. PCM16, Float, Vorbis)
 - **AudioFormat**: the container format (e.g. WAV, FLAC, OGG, MP3)
 
-This guide explains how SndFile combines them on **read** and **write**.
+This guide explains how SoundFile combines them on **read** and **write**.
 
 ---
 
@@ -65,7 +65,7 @@ When you read a file, SndFle:
 ## What happens on write?
 
 - If you omit `AudioFormat`, it is inferred from the file extension.
-- If the extension is unknown, SndFile throws:
+- If the extension is unknown, SoundFile throws:
 - If you omit `SampleFormat`, it defaults to the Audio format's default sample format:
   - WAV → PCM16
   - FLAC → PCM16
@@ -80,41 +80,41 @@ When you read a file, SndFle:
 
 ## Format Compatibility
 
-Not every AudioFormat supports every SampleFormat. Use `snd_check_format()` to validate:
+Not every AudioFormat supports every SampleFormat. Use `sf_check_format()` to validate:
 
 ```php
-use function PhpMlKit\Sndfile\snd_check_format;
-use PhpMlKit\Sndfile\Enums\AudioFormat;
-use PhpMlKit\Sndfile\Enums\SampleFormat;
+use function PhpMlKit\SoundFile\sf_check_format;
+use PhpMlKit\SoundFile\Enums\AudioFormat;
+use PhpMlKit\SoundFile\Enums\SampleFormat;
 
 // Common valid combinations
-snd_check_format(AudioFormat::Wav, SampleFormat::Pcm16);     // true
-snd_check_format(AudioFormat::Wav, SampleFormat::Float);     // true
-snd_check_format(AudioFormat::Flac, SampleFormat::Pcm16);    // true
-snd_check_format(AudioFormat::Flac, SampleFormat::Pcm24);    // true
-snd_check_format(AudioFormat::Ogg, SampleFormat::Vorbis);    // true
-snd_check_format(AudioFormat::Aiff, SampleFormat::Float);    // true
+sf_check_format(AudioFormat::Wav, SampleFormat::Pcm16);     // true
+sf_check_format(AudioFormat::Wav, SampleFormat::Float);     // true
+sf_check_format(AudioFormat::Flac, SampleFormat::Pcm16);    // true
+sf_check_format(AudioFormat::Flac, SampleFormat::Pcm24);    // true
+sf_check_format(AudioFormat::Ogg, SampleFormat::Vorbis);    // true
+sf_check_format(AudioFormat::Aiff, SampleFormat::Float);    // true
 
 // Invalid combinations
-snd_check_format(AudioFormat::Ogg, SampleFormat::Pcm16);     // false
-snd_check_format(AudioFormat::Flac, SampleFormat::Float);    // false
+sf_check_format(AudioFormat::Ogg, SampleFormat::Pcm16);     // false
+sf_check_format(AudioFormat::Flac, SampleFormat::Float);    // false
 ```
 
-An invalid combination throws a `SndfileException` before any file is created.
+An invalid combination throws a `SoundFileException` before any file is created.
 
 ## Bit Depth and Clipping
 
 PCM formats store integer samples (e.g. `Int16`) and floating formats store `Float32/Float64`.
 
-SndFile does not impose an extra normalization layer; you are responsible for choosing a representation that matches
+SoundFile does not impose an extra normalization layer; you are responsible for choosing a representation that matches
 your pipeline. If you write float data to a PCM subtype, it will be converted to integers. For example, when writing Float21 data as Pcm16, values outside the Int16 range (-32768 to 32767) are clipped by libsndfile:
 
 ```php
 // Values > 32767 clip to 32767
 $loud = NDArray::array([[50000.0], [-50000.0]], DType::Float32);
-snd_write('loud.wav', $loud, 44100); // Written as Pcm16 — values clipped
+sf_write('loud.wav', $loud, 44100); // Written as Pcm16 — values clipped
 
-[$read, $] = snd_read('loud.wav');
+[$read, $] = sf_read('loud.wav');
 $arr = $read->toArray();
 // $arr[0] will be ~32767, $arr[1] will be ~-32768
 ```

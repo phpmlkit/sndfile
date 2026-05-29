@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMlKit\Sndfile\FFI;
+namespace PhpMlKit\SoundFile\FFI;
 
 use Codewithkyrian\PlatformPackageInstaller\Platform;
 use FFI;
